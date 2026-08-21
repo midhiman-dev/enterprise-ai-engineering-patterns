@@ -1,6 +1,6 @@
 # Use Case 01 — Corrective RAG for Kubernetes Troubleshooting
 
-> **Current Status:** 🟢 **Pass-2 — Domain Ports Implemented.** Pure Python domain entities (`Question`, `Document`, `GradedDocument`, `Answer`, `DecisionTrace`) and domain capability ports (`Retriever`, `RelevanceGrader`, `QueryRewriter`, `Generator`, `WebSearchProvider`, `HallucinationChecker`, `DecisionTraceRepository`) are implemented. Workflow orchestration (LangGraph) and infrastructure adapters are not yet implemented.
+> **Current Status:** 🟢 **Pass-3 — Straight Local LangGraph Path Implemented.** LangGraph state (`GraphState`), workflow dependency injection (`WorkflowDependencies`), node handlers (`retrieve`, `grade_documents`, `generate`, `hallucination_check`), straight-path graph compilation, handwritten fakes, and deterministic unit tests are implemented. Correction routing (web search fallback), query rewriting, retries, safe refusal, and real infrastructure adapters are not yet implemented.
 
 
 ---

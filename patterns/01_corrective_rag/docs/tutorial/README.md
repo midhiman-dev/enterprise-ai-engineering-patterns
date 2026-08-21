@@ -1,6 +1,6 @@
 # Use Case 01 — Step-by-Step Tutorial
 
-> **Current Status:** 🟢 **Pass-2 Implemented.** Domain entities (`Question`, `Document`, `GradedDocument`, `Answer`, `DecisionTrace`) and domain capability ports (`Retriever`, `RelevanceGrader`, `QueryRewriter`, `Generator`, `WebSearchProvider`, `HallucinationChecker`, `DecisionTraceRepository`) are implemented and verified. Detailed step-by-step tutorial content will be extracted as subsequent workflow slices complete.
+> **Current Status:** 🟢 **Pass-3 Implemented.** Domain entities, domain ports, LangGraph state (`GraphState`), straight workflow nodes (`retrieve`, `grade_documents`, `generate`, `hallucination_check`), handwritten deterministic fakes, and application unit tests are implemented and verified.
 
 
 ## Overview
@@ -17,11 +17,12 @@ The tutorial follows a deliberate learning sequence designed to isolate framewor
 
 1. **Problem & Core Concepts** — The stale Kubernetes knowledge base failure mode.
 2. **Domain Entities** — `Question`, `Document`, `GradedDocument`, `Answer`, `DecisionTrace`. (Implemented)
-3. **Domain Ports** — Provider-neutral capability contracts (`Retriever`, `RelevanceGrader`, `QueryRewriter`, `Generator`, `WebSearchProvider`, `HallucinationChecker`, `DecisionTraceRepository`) defined using `typing.Protocol` for structural typing without inheritance ceremony. (Implemented)
-4. **LangGraph State & Workflow** — Defining graph state schema, node handlers, conditional edge routing, and retry bounds.
-5. **Fake / Stub Port Implementations** — Controlled in-memory stubs for testing workflow routing without external network calls.
-6. **Routing & Workflow Unit Tests** — Testing all graph execution paths deterministically using port mocks.
-7. **Chroma Retrieval Adapter** — Concrete vector store implementation of the `Retriever` port.
+3. **Domain Ports** — Provider-neutral capability contracts (`Retriever`, `RelevanceGrader`, `QueryRewriter`, `Generator`, `WebSearchProvider`, `HallucinationChecker`, `DecisionTraceRepository`) defined using `typing.Protocol`. (Implemented)
+4. **LangGraph State & Straight Workflow** — Defining graph state schema, node handlers, workflow dependency container, and straight graph compilation. (Implemented)
+5. **Handwritten Fakes** — Controlled in-memory fakes for testing workflow routing without external network calls. (Implemented)
+6. **Straight-Path Routing Unit Tests** — Testing the straight-through graph execution path deterministically using handwritten fakes. (Implemented)
+7. **Query Rewriting & Web Search Routing** — Adding stale-KB detection and web fallback routing branches.
+8. **Chroma Retrieval Adapter** — Concrete vector store implementation of the `Retriever` port.
 8. **OpenAI / Ollama AI Adapters** — Concrete LLM implementations of `Generator`, `RelevanceGrader`, and `HallucinationChecker`.
 9. **Tavily Web Search Adapter** — Concrete implementation of `WebSearchProvider`.
 10. **Decision Trace Persistence** — SQLite storage implementation of `DecisionTraceRepository`.
@@ -31,4 +32,4 @@ The tutorial follows a deliberate learning sequence designed to isolate framewor
 14. **Decision Trace Inspection** — Auditing system decisions across local vs. web fallback routes.
 15. **Production Evolution & Interview Lessons** — System design trade-offs and scaling strategies.
 
-> **Pedagogical Rationale:** Learners should first understand workflow orchestration independently of external APIs. LangGraph routing must be executable and testable using controlled fake implementations before introducing provider integration complexity.
+> **Pedagogical Rationale:** Learners should first understand workflow orchestration independently of external APIs. LangGraph routing must be executable and testable using controlled fake implementations before introducing provider integration complexity. Handwritten fakes make workflow testing deterministic and isolate orchestration logic from network and vendor API variability.

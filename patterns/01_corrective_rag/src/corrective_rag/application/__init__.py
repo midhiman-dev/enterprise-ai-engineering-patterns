@@ -1,5 +1,15 @@
-"""Application Layer.
+"""Application Layer package.
 
-Houses use-case orchestration and workflow definitions (e.g., LangGraph workflow).
-LangGraph workflow nodes interact with domain capabilities through Domain Ports.
+Contains workflow orchestration, state definitions, dependencies, and graph nodes.
 """
+
+from corrective_rag.application.graph_state import GraphState
+from corrective_rag.application.workflow import build_graph, create_initial_state
+from corrective_rag.application.workflow_dependencies import WorkflowDependencies
+
+__all__ = [
+    "GraphState",
+    "WorkflowDependencies",
+    "build_graph",
+    "create_initial_state",
+]
