@@ -92,3 +92,35 @@ class FakeHallucinationChecker:
     def is_supported(self, answer: Answer, documents: Sequence[Document]) -> bool:
         self.received_checks.append((answer, tuple(documents)))
         return self._is_supported
+
+
+class FakeQueryRewriter:
+    """Fake query rewriter returning a predefined Question and recording input questions.
+
+    Note: Satisfies QueryRewriter port structurally. Does NOT inherit from QueryRewriter.
+    """
+
+    def __init__(self, rewritten_question: Question | None = None) -> None:
+        self._rewritten_question = rewritten_question or Question(
+            text="Fake rewritten search query"
+        )
+        self.received_questions: list[Question] = []
+
+    def rewrite(self, question: Question) -> Question:
+        self.received_questions.append(question)
+        return self._rewritten_question
+
+
+class FakeWebSearchProvider:
+    """Fake web search provider returning predefined documents and recording search questions.
+
+    Note: Satisfies WebSearchProvider port structurally. Does NOT inherit from WebSearchProvider.
+    """
+
+    def __init__(self, documents: Sequence[Document] | None = None) -> None:
+        self._documents = tuple(documents or [])
+        self.received_questions: list[Question] = []
+
+    def search(self, question: Question) -> Sequence[Document]:
+        self.received_questions.append(question)
+        return self._documents

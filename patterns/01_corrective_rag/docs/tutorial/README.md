@@ -1,6 +1,6 @@
 # Use Case 01 — Step-by-Step Tutorial
 
-> **Current Status:** 🟢 **Pass-3 Implemented.** Domain entities, domain ports, LangGraph state (`GraphState`), straight workflow nodes (`retrieve`, `grade_documents`, `generate`, `hallucination_check`), handwritten deterministic fakes, and application unit tests are implemented and verified.
+> **Current Status:** 🟢 **Pass-4 Implemented.** Domain entities, domain ports, LangGraph state (`GraphState`), workflow nodes (`retrieve`, `grade_documents`, `rewrite_query`, `web_search`, `generate`, `hallucination_check`), conditional routing (`route_after_grading`), handwritten deterministic fakes, and application unit tests for straight and corrective paths are implemented and verified.
 
 
 ## Overview
@@ -21,15 +21,17 @@ The tutorial follows a deliberate learning sequence designed to isolate framewor
 4. **LangGraph State & Straight Workflow** — Defining graph state schema, node handlers, workflow dependency container, and straight graph compilation. (Implemented)
 5. **Handwritten Fakes** — Controlled in-memory fakes for testing workflow routing without external network calls. (Implemented)
 6. **Straight-Path Routing Unit Tests** — Testing the straight-through graph execution path deterministically using handwritten fakes. (Implemented)
-7. **Query Rewriting & Web Search Routing** — Adding stale-KB detection and web fallback routing branches.
+7. **Query Rewriting & Web Search Routing** — Adding stale-KB detection and web fallback routing branches. (Implemented)
 8. **Chroma Retrieval Adapter** — Concrete vector store implementation of the `Retriever` port.
-8. **OpenAI / Ollama AI Adapters** — Concrete LLM implementations of `Generator`, `RelevanceGrader`, and `HallucinationChecker`.
-9. **Tavily Web Search Adapter** — Concrete implementation of `WebSearchProvider`.
-10. **Decision Trace Persistence** — SQLite storage implementation of `DecisionTraceRepository`.
-11. **Composition Root** — Assembling graph orchestration with concrete adapters.
-12. **FastAPI / Interface** — Exposing HTTP/SSE endpoints for query processing and decision trace inspection.
-13. **Integration & Golden Acceptance Tests** — Running golden queries against full adapter stack.
-14. **Decision Trace Inspection** — Auditing system decisions across local vs. web fallback routes.
-15. **Production Evolution & Interview Lessons** — System design trade-offs and scaling strategies.
+9. **OpenAI / Ollama AI Adapters** — Concrete LLM implementations of `Generator`, `RelevanceGrader`, and `HallucinationChecker`.
+10. **Tavily Web Search Adapter** — Concrete implementation of `WebSearchProvider`.
+11. **Decision Trace Persistence** — SQLite storage implementation of `DecisionTraceRepository`.
+12. **Composition Root** — Assembling graph orchestration with concrete adapters.
+13. **FastAPI / Interface** — Exposing HTTP/SSE endpoints for query processing and decision trace inspection.
+14. **Integration & Golden Acceptance Tests** — Running golden queries against full adapter stack.
+15. **Decision Trace Inspection** — Auditing system decisions across local vs. web fallback routes.
+16. **Production Evolution & Interview Lessons** — System design trade-offs and scaling strategies.
+
+> **Learner Note on Question Semantics:** The original user question (`question`) is preserved in state throughout execution, while a separate search query reformulation (`rewritten_question`) is generated and passed only to external web search. Answer generation still receives the original user question to ensure the generated response directly addresses the user's intent.
 
 > **Pedagogical Rationale:** Learners should first understand workflow orchestration independently of external APIs. LangGraph routing must be executable and testable using controlled fake implementations before introducing provider integration complexity. Handwritten fakes make workflow testing deterministic and isolate orchestration logic from network and vendor API variability.

@@ -10,6 +10,7 @@ def test_create_initial_state_defaults() -> None:
     state = create_initial_state(question)
 
     assert state["question"] == question
+    assert state["rewritten_question"] is None
     assert state["documents"] == []
     assert state["graded_documents"] == []
     assert state["answer"] is None

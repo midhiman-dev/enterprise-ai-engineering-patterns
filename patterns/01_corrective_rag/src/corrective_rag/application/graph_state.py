@@ -24,7 +24,8 @@ class GraphState(TypedDict):
 
     Attributes:
         question: The user's input question being answered.
-        documents: The current set of documents (initially retrieved, then filtered to relevant).
+        rewritten_question: Search reformulation of user question for external search (None if not rewritten).
+        documents: The current set of documents (initially retrieved, filtered, or web search evidence).
         graded_documents: Evaluation results for each candidate document from relevance grading.
         answer: The candidate answer generated from evidence documents (None until generated).
         is_supported: Grounding verification result (None until checked).
@@ -32,6 +33,7 @@ class GraphState(TypedDict):
     """
 
     question: Question
+    rewritten_question: Question | None
     documents: list[Document]
     graded_documents: list[GradedDocument]
     answer: Answer | None

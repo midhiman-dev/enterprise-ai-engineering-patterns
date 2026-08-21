@@ -8,8 +8,10 @@ from corrective_rag.domain.entities.question import Question
 from tests.unit.application.fakes import (
     FakeGenerator,
     FakeHallucinationChecker,
+    FakeQueryRewriter,
     FakeRelevanceGrader,
     FakeRetriever,
+    FakeWebSearchProvider,
 )
 
 
@@ -35,13 +37,17 @@ def test_straight_path_execution_golden_query() -> None:
 
     retriever = FakeRetriever(documents=[doc1, doc2])
     grader = FakeRelevanceGrader(default_is_relevant=True)
+    query_rewriter = FakeQueryRewriter()
+    web_search_provider = FakeWebSearchProvider()
     generator = FakeGenerator(answer=expected_answer)
     checker = FakeHallucinationChecker(is_supported=True)
 
     deps = WorkflowDependencies(
         retriever=retriever,
         relevance_grader=grader,
+        query_rewriter=query_rewriter,
         generator=generator,
+        web_search_provider=web_search_provider,
         hallucination_checker=checker,
     )
 
@@ -51,6 +57,7 @@ def test_straight_path_execution_golden_query() -> None:
 
     # 1. State assertions
     assert result["question"] == question
+    assert result["rewritten_question"] is None
     assert result["documents"] == [doc1, doc2]
     assert len(result["graded_documents"]) == 2
     assert result["answer"] == expected_answer
@@ -65,6 +72,10 @@ def test_straight_path_execution_golden_query() -> None:
         "hallucination_check",
     ]
 
+    # 3. Verify no query rewrite or web search calls on straight path
+    assert query_rewriter.received_questions == []
+    assert web_search_provider.received_questions == []
+
 
 def test_grading_filters_irrelevant_documents() -> None:
     """Verifies that relevance grading filters out irrelevant documents before generation."""
@@ -77,6 +88,8 @@ def test_grading_filters_irrelevant_documents() -> None:
     grader = FakeRelevanceGrader(
         relevant_document_sources=["doc_rel_1", "doc_rel_2"],
     )
+    query_rewriter = FakeQueryRewriter()
+    web_search_provider = FakeWebSearchProvider()
     expected_answer = Answer(text="Grounded answer from relevant docs", status=AnswerStatus.ANSWERED)
     generator = FakeGenerator(answer=expected_answer)
     checker = FakeHallucinationChecker(is_supported=True)
@@ -84,7 +97,9 @@ def test_grading_filters_irrelevant_documents() -> None:
     deps = WorkflowDependencies(
         retriever=retriever,
         relevance_grader=grader,
+        query_rewriter=query_rewriter,
         generator=generator,
+        web_search_provider=web_search_provider,
         hallucination_checker=checker,
     )
 
@@ -102,6 +117,10 @@ def test_grading_filters_irrelevant_documents() -> None:
     assert gen_question == question
     assert gen_docs == (doc_rel_1, doc_rel_2)
 
+    # Fallback search components were not invoked
+    assert query_rewriter.received_questions == []
+    assert web_search_provider.received_questions == []
+
 
 def test_dependency_call_sequence_and_arguments() -> None:
     """Verifies that each domain port receives exact expected inputs in execution order."""
@@ -111,13 +130,17 @@ def test_dependency_call_sequence_and_arguments() -> None:
 
     retriever = FakeRetriever(documents=[doc])
     grader = FakeRelevanceGrader(default_is_relevant=True)
+    query_rewriter = FakeQueryRewriter()
+    web_search_provider = FakeWebSearchProvider()
     generator = FakeGenerator(answer=expected_answer)
     checker = FakeHallucinationChecker(is_supported=True)
 
     deps = WorkflowDependencies(
         retriever=retriever,
         relevance_grader=grader,
+        query_rewriter=query_rewriter,
         generator=generator,
+        web_search_provider=web_search_provider,
         hallucination_checker=checker,
     )
 
@@ -135,3 +158,7 @@ def test_dependency_call_sequence_and_arguments() -> None:
 
     # HallucinationChecker received candidate answer + relevant documents tuple
     assert checker.received_checks == [(expected_answer, (doc,))]
+
+    # External search ports not called
+    assert query_rewriter.received_questions == []
+    assert web_search_provider.received_questions == []

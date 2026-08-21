@@ -1,6 +1,6 @@
 # Use Case 01 — Corrective RAG for Kubernetes Troubleshooting
 
-> **Current Status:** 🟢 **Pass-3 — Straight Local LangGraph Path Implemented.** LangGraph state (`GraphState`), workflow dependency injection (`WorkflowDependencies`), node handlers (`retrieve`, `grade_documents`, `generate`, `hallucination_check`), straight-path graph compilation, handwritten fakes, and deterministic unit tests are implemented. Correction routing (web search fallback), query rewriting, retries, safe refusal, and real infrastructure adapters are not yet implemented.
+> **Current Status:** 🟢 **Pass-4 — Query Rewrite and Web Search Correction Path Implemented.** LangGraph state (`GraphState`), workflow dependencies (`WorkflowDependencies`), node handlers (`retrieve`, `grade_documents`, `rewrite_query`, `web_search`, `generate`, `hallucination_check`), conditional routing (`route_after_grading`), handwritten fakes (`FakeQueryRewriter`, `FakeWebSearchProvider`), and deterministic unit tests for both local retrieval and web fallback paths are implemented and verified. Hallucination retries, safe refusal, real infrastructure adapters, API, and UI are not yet implemented.
 
 
 ---
