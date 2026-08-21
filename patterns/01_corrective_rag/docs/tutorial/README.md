@@ -1,6 +1,7 @@
 # Use Case 01 — Step-by-Step Tutorial
 
-> **Current Status:** Placeholder. This tutorial will be written incrementally after the corresponding source code is implemented and verified.
+> **Current Status:** 🟢 **Pass-1 Implemented.** Domain entities slice (`Question`, `Document`, `GradedDocument`, `Answer`, `DecisionTrace`) and unit tests are implemented and verified. Detailed step-by-step tutorial content will be extracted as subsequent workflow slices complete.
+
 
 ## Overview
 

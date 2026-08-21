@@ -1,6 +1,7 @@
 # Use Case 01 — Corrective RAG for Kubernetes Troubleshooting
 
-> **Current Status:** 🚧 **Pass-0 — Scaffolding Only.** Architectural boundaries, package layout, and documentation templates established. No runtime AI workflow, models, or vector stores are implemented in this pass.
+> **Current Status:** 🟢 **Pass-1 — Core Domain Entities Implemented.** Pure Python domain entities (`Question`, `Document`, `GradedDocument`, `Answer`, `DecisionTrace`) and unit tests implemented. Domain ports, workflow orchestration, and infrastructure adapters are not yet implemented.
+
 
 ---
 
