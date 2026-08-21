@@ -32,6 +32,8 @@ The recurring design signature is:
 
 # Use Case 01 — Corrective RAG for Kubernetes Troubleshooting
 
+> 📁 **Use Case Directory:** [`patterns/01_corrective_rag`](patterns/01_corrective_rag/README.md)
+>
 > **Important terminology:** this use case implements **Corrective RAG (CRAG) using LangGraph**. It is not GraphRAG in the knowledge-graph sense.
 
 ## The Problem

@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "corrective-rag"
+version = "0.1.0"
+description = "Use Case 01 — Corrective RAG for Kubernetes Troubleshooting using LangGraph"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Enterprise AI Engineering Team" }
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
