@@ -1,6 +1,6 @@
 # Use Case 01 — Corrective RAG for Kubernetes Troubleshooting
 
-> **Current Status:** 🟢 **Pass-1 — Core Domain Entities Implemented.** Pure Python domain entities (`Question`, `Document`, `GradedDocument`, `Answer`, `DecisionTrace`) and unit tests implemented. Domain ports, workflow orchestration, and infrastructure adapters are not yet implemented.
+> **Current Status:** 🟢 **Pass-2 — Domain Ports Implemented.** Pure Python domain entities (`Question`, `Document`, `GradedDocument`, `Answer`, `DecisionTrace`) and domain capability ports (`Retriever`, `RelevanceGrader`, `QueryRewriter`, `Generator`, `WebSearchProvider`, `HallucinationChecker`, `DecisionTraceRepository`) are implemented. Workflow orchestration (LangGraph) and infrastructure adapters are not yet implemented.
 
 
 ---
@@ -58,7 +58,7 @@ Domain (Pure Python Entities & Ports)
 Infrastructure (Chroma, OpenAI, Tavily, Persistence Adapters)
 ```
 
-* **Domain**: Pure Python entities (`Question`, `Document`, `GradedDocument`, `Answer`, `DecisionTrace`) and ports (`Retriever`, `RelevanceGrader`, `Generator`, `WebSearchProvider`, `HallucinationChecker`). Zero third-party SDK dependencies.
+* **Domain**: Pure Python entities (`Question`, `Document`, `GradedDocument`, `Answer`, `DecisionTrace`) and ports (`Retriever`, `RelevanceGrader`, `QueryRewriter`, `Generator`, `WebSearchProvider`, `HallucinationChecker`, `DecisionTraceRepository`). Zero third-party SDK dependencies.
 * **Application**: Houses the LangGraph workflow. Graph nodes invoke Domain ports.
 * **Infrastructure**: Implements Domain ports using concrete vendor SDKs.
 

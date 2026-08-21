@@ -1,6 +1,6 @@
 # Use Case 01 — Step-by-Step Tutorial
 
-> **Current Status:** 🟢 **Pass-1 Implemented.** Domain entities slice (`Question`, `Document`, `GradedDocument`, `Answer`, `DecisionTrace`) and unit tests are implemented and verified. Detailed step-by-step tutorial content will be extracted as subsequent workflow slices complete.
+> **Current Status:** 🟢 **Pass-2 Implemented.** Domain entities (`Question`, `Document`, `GradedDocument`, `Answer`, `DecisionTrace`) and domain capability ports (`Retriever`, `RelevanceGrader`, `QueryRewriter`, `Generator`, `WebSearchProvider`, `HallucinationChecker`, `DecisionTraceRepository`) are implemented and verified. Detailed step-by-step tutorial content will be extracted as subsequent workflow slices complete.
 
 
 ## Overview
@@ -16,8 +16,8 @@ In accordance with repository guidelines:
 The tutorial follows a deliberate learning sequence designed to isolate framework orchestration mechanics from third-party API integration complexity:
 
 1. **Problem & Core Concepts** — The stale Kubernetes knowledge base failure mode.
-2. **Domain Entities** — `Question`, `Document`, `GradedDocument`, `Answer`, `DecisionTrace`.
-3. **Domain Ports** — Abstract interfaces for retrieval, grading, generation, search, and trace persistence.
+2. **Domain Entities** — `Question`, `Document`, `GradedDocument`, `Answer`, `DecisionTrace`. (Implemented)
+3. **Domain Ports** — Provider-neutral capability contracts (`Retriever`, `RelevanceGrader`, `QueryRewriter`, `Generator`, `WebSearchProvider`, `HallucinationChecker`, `DecisionTraceRepository`) defined using `typing.Protocol` for structural typing without inheritance ceremony. (Implemented)
 4. **LangGraph State & Workflow** — Defining graph state schema, node handlers, conditional edge routing, and retry bounds.
 5. **Fake / Stub Port Implementations** — Controlled in-memory stubs for testing workflow routing without external network calls.
 6. **Routing & Workflow Unit Tests** — Testing all graph execution paths deterministically using port mocks.

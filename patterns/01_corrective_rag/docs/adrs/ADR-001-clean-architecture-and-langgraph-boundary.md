@@ -17,7 +17,7 @@ We need an architectural decision that preserves **Clean Architecture provider i
 
 We will place **LangGraph workflow orchestration inside the Application layer**, allowing LangGraph graph state, nodes, edges, conditional routing, retries, and compilation to be directly visible in `corrective_rag.application`.
 
-Crucially, LangGraph node functions will **not** import or invoke concrete SDKs (OpenAI, Chroma, Tavily, SQLite) directly. Instead, nodes will call abstract **Domain Ports** (e.g., `Retriever`, `RelevanceGrader`, `Generator`, `WebSearchProvider`, `HallucinationChecker`, `DecisionTraceRepository`). Concrete implementations of these ports will reside in `corrective_rag.infrastructure`.
+Crucially, LangGraph node functions will **not** import or invoke concrete SDKs (OpenAI, Chroma, Tavily, SQLite) directly. Instead, nodes will call abstract **Domain Ports** (e.g., `Retriever`, `RelevanceGrader`, `QueryRewriter`, `Generator`, `WebSearchProvider`, `HallucinationChecker`, `DecisionTraceRepository`). Concrete implementations of these ports will reside in `corrective_rag.infrastructure`.
 
 ## Alternatives Considered
 
