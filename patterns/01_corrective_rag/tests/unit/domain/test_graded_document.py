@@ -1,7 +1,5 @@
 """Unit tests for GradedDocument domain entity."""
 
-import pytest
-
 from corrective_rag.domain.entities import Document, GradedDocument
 
 
@@ -32,12 +30,12 @@ def test_graded_document_irrelevant_with_score_and_reason() -> None:
     assert graded.reason == "Document describes network policies rather than pod lifecycle status."
 
 
-def test_graded_document_rejects_score_out_of_range() -> None:
-    """Verifies that numeric score outside 0.0 to 1.0 raises ValueError."""
+def test_graded_document_preserves_numeric_score_without_range_restrictions() -> None:
+    """Verifies that numeric score values are preserved without forcing a [0, 1] range contract."""
     doc = Document(content="Valid content", source="k8s-docs/pods.md")
 
-    with pytest.raises(ValueError, match="score must be between 0.0 and 1.0"):
-        GradedDocument(document=doc, is_relevant=True, score=1.5)
+    graded_high = GradedDocument(document=doc, is_relevant=True, score=7.4)
+    assert graded_high.score == 7.4
 
-    with pytest.raises(ValueError, match="score must be between 0.0 and 1.0"):
-        GradedDocument(document=doc, is_relevant=False, score=-0.1)
+    graded_raw = GradedDocument(document=doc, is_relevant=False, score=-12.5)
+    assert graded_raw.score == -12.5

@@ -15,16 +15,16 @@ class AnswerStatus(str, Enum):
 class Answer:
     """Represents the final answer returned to the user.
 
-    Distinguishes between a grounded, successful answer and a safe refusal
-    or unsupported answer when available evidence is insufficient.
+    Distinguishes between a grounded, successful answer and an explicit safe
+    refusal explanation when available evidence is insufficient.
 
     Invariants:
-        - text must not be empty or whitespace-only when status is ANSWERED.
+        - text must not be empty or whitespace-only for any AnswerStatus.
     """
 
     text: str
     status: AnswerStatus = AnswerStatus.ANSWERED
 
     def __post_init__(self) -> None:
-        if self.status == AnswerStatus.ANSWERED and (not self.text or not self.text.strip()):
-            raise ValueError("Answer text cannot be blank when status is ANSWERED.")
+        if not self.text or not self.text.strip():
+            raise ValueError("Answer text cannot be empty or whitespace-only.")

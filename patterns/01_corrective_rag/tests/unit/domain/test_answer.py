@@ -15,7 +15,7 @@ def test_answer_successful_grounded_response() -> None:
 
 
 def test_answer_unsupported_refusal_response() -> None:
-    """Verifies creation of a safe refusal answer with UNSUPPORTED status."""
+    """Verifies creation of an explicit safe refusal answer with UNSUPPORTED status."""
     refusal_text = "I cannot support an answer for --enable-quantum-scheduler with available evidence."
     answer = Answer(text=refusal_text, status=AnswerStatus.UNSUPPORTED)
 
@@ -23,10 +23,16 @@ def test_answer_unsupported_refusal_response() -> None:
     assert answer.status == AnswerStatus.UNSUPPORTED
 
 
-def test_answer_rejects_blank_text_when_status_is_answered() -> None:
-    """Verifies that an empty or whitespace answer with ANSWERED status raises ValueError."""
-    with pytest.raises(ValueError, match="Answer text cannot be blank when status is ANSWERED"):
+def test_answer_rejects_blank_text_for_all_statuses() -> None:
+    """Verifies that empty or whitespace text is rejected for all AnswerStatus values."""
+    with pytest.raises(ValueError, match="Answer text cannot be empty or whitespace-only"):
         Answer(text="", status=AnswerStatus.ANSWERED)
 
-    with pytest.raises(ValueError, match="Answer text cannot be blank when status is ANSWERED"):
+    with pytest.raises(ValueError, match="Answer text cannot be empty or whitespace-only"):
         Answer(text="   \n\t ", status=AnswerStatus.ANSWERED)
+
+    with pytest.raises(ValueError, match="Answer text cannot be empty or whitespace-only"):
+        Answer(text="", status=AnswerStatus.UNSUPPORTED)
+
+    with pytest.raises(ValueError, match="Answer text cannot be empty or whitespace-only"):
+        Answer(text="   \n\t ", status=AnswerStatus.UNSUPPORTED)

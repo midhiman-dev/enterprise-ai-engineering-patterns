@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from types import MappingProxyType
 from typing import Mapping
 
 
@@ -11,6 +12,12 @@ class Document:
 
     Designed to be provider-neutral, supporting both local Kubernetes knowledge-base
     evidence and web search evidence without vendor-specific fields.
+
+    Note on Immutability:
+        `@dataclass(frozen=True)` prevents rebinding fields. In addition, `metadata`
+        is defensively copied and wrapped in a read-only `MappingProxyType` during
+        initialization to provide shallow immutability against caller dictionary mutation.
+        Nested mutable objects inside metadata are not recursively frozen.
 
     Invariants:
         - content must not be empty or whitespace-only.
@@ -29,3 +36,9 @@ class Document:
             raise ValueError("Document content cannot be empty or whitespace-only.")
         if not self.source or not self.source.strip():
             raise ValueError("Document source cannot be empty or whitespace-only.")
+
+        object.__setattr__(
+            self,
+            "metadata",
+            MappingProxyType(dict(self.metadata)),
+        )

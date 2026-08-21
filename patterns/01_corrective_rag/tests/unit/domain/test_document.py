@@ -60,3 +60,29 @@ def test_document_rejects_whitespace_source() -> None:
     """Verifies that whitespace-only document source raises ValueError."""
     with pytest.raises(ValueError, match="Document source cannot be empty"):
         Document(content="Valid content", source="   \t ")
+
+
+def test_document_metadata_defensive_copy_prevents_caller_mutation() -> None:
+    """Verifies that mutating the caller's metadata dict after creation does not affect entity."""
+    caller_metadata = {"provider": "local", "rank": 2}
+    doc = Document(
+        content="Pod troubleshooting evidence",
+        source="k8s-docs/pods.md",
+        metadata=caller_metadata,
+    )
+
+    caller_metadata["provider"] = "modified_by_caller"
+    assert doc.metadata["provider"] == "local"
+
+
+def test_document_metadata_prevents_direct_item_mutation() -> None:
+    """Verifies that mutating document.metadata directly raises TypeError."""
+    doc = Document(
+        content="Pod troubleshooting evidence",
+        source="k8s-docs/pods.md",
+        metadata={"provider": "local"},
+    )
+
+    with pytest.raises(TypeError):
+        # MappingProxyType prevents item assignment
+        doc.metadata["provider"] = "attempted_mutation"  # type: ignore[index]

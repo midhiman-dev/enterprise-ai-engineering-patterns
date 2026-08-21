@@ -12,19 +12,13 @@ class GradedDocument:
     Encapsulates the core domain decision of whether a document is relevant
     to a given question, along with optional evaluation details.
 
-    Invariants:
-        - document must be a valid Document instance.
-        - if score is provided, it must be between 0.0 and 1.0 inclusive.
+    Note on Score Semantics:
+        `score` represents optional supporting numeric metadata (e.g., probability,
+        cosine similarity, reranker logit). The Domain layer does not impose an
+        arbitrary range contract (such as [0, 1]) on scores to remain adapter-agnostic.
     """
 
     document: Document
     is_relevant: bool
     score: float | None = None
     reason: str | None = None
-
-    def __post_init__(self) -> None:
-        if self.score is not None:
-            if not (0.0 <= self.score <= 1.0):
-                raise ValueError(
-                    f"Graded document score must be between 0.0 and 1.0, got {self.score}"
-                )

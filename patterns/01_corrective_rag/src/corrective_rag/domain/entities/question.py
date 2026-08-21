@@ -1,8 +1,6 @@
 """Question entity representing a user's troubleshooting query."""
 
-from dataclasses import dataclass, field
-from datetime import datetime
-import uuid
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -15,8 +13,6 @@ class Question:
     """
 
     text: str
-    id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    created_at: datetime = field(default_factory=datetime.now)
 
     def __post_init__(self) -> None:
         if not self.text or not self.text.strip():
