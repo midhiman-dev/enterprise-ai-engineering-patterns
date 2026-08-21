@@ -35,4 +35,4 @@
 
 1. **Pure Domain Core:** Domain contains zero dependencies on external frameworks, databases, or AI vendor SDKs.
 2. **LangGraph Visibility:** LangGraph orchestration is explicitly placed in the Application layer, making graph state, nodes, edges, routing, and retries clearly visible to learners.
-3. **Provider Isolation:** External LLMs, vector stores, and web search engines implement abstract Domain ports. Replacing a vendor (e.g., swapping OpenAI for Ollama, or Chroma for Qdrant) requires zero changes to the Domain or Application layers.
+3. **Provider Isolation:** External LLMs, vector stores, and web search engines implement abstract Domain ports. Replacing a vendor adapter (e.g., swapping OpenAI for Ollama, or Chroma for Qdrant) requires zero changes to the Domain or Application layers, provided the replacement preserves the established Domain port contract.

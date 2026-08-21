@@ -8,7 +8,9 @@
 
 This use case demonstrates how to engineer a **Corrective RAG (CRAG)** system using **LangGraph** within a **Clean Architecture / Ports & Adapters** framework to troubleshoot Kubernetes cluster issues.
 
-The core learning objective is to build an agentic RAG system that evaluates its own retrieval quality, rewrites queries, falls back to web search when local knowledge is insufficient or stale, checks generated answers for hallucinations, and maintains explicit decision traces.
+The core learning objective is to build a self-correcting RAG workflow orchestrated with LangGraph that evaluates its own retrieval quality, rewrites queries, falls back to web search when local knowledge is insufficient or stale, checks generated answers for hallucinations, and maintains explicit decision traces.
+
+> **Note on Framework Terminology:** LangGraph can orchestrate deterministic workflows, stateful AI workflows, and agentic systems. Using LangGraph does not automatically make an application an agent. This pattern demonstrates a stateful, conditional workflow with explicit graph state, routing logic, and bounded retries.
 
 ---
 
@@ -25,7 +27,9 @@ This pattern simulates that exact challenge:
 
 ## Three Golden Test Queries
 
-The graph will be evaluated against three deterministic golden acceptance scenarios:
+The graph will be evaluated against three golden acceptance scenarios with expected graph routes:
+
+> Controlled unit and acceptance tests using stub ports make graph routing deterministic, whereas live provider execution remains probabilistic.
 
 1. **Local Knowledge Sufficient:**
    * *Query:* `Why does kubectl get pods show CrashLoopBackOff?`
@@ -53,7 +57,7 @@ Domain (Pure Python Entities & Ports)
 Infrastructure (Chroma, OpenAI, Tavily, Persistence Adapters)
 ```
 
-* **Domain**: Pure Python entities (Question, Evidence, DecisionTrace) and ports (`Retriever`, `RelevanceGrader`, `Generator`, `WebSearchProvider`, `HallucinationChecker`). Zero third-party SDK dependencies.
+* **Domain**: Pure Python entities (`Question`, `Document`, `GradedDocument`, `Answer`, `DecisionTrace`) and ports (`Retriever`, `RelevanceGrader`, `Generator`, `WebSearchProvider`, `HallucinationChecker`). Zero third-party SDK dependencies.
 * **Application**: Houses the LangGraph workflow. Graph nodes invoke Domain ports.
 * **Infrastructure**: Implements Domain ports using concrete vendor SDKs.
 

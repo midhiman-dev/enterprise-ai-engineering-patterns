@@ -6,9 +6,9 @@ Accepted
 
 ## Context
 
-When engineering AI systems with agentic workflow frameworks like LangGraph, team architectures often drift into one of two extremes:
+When engineering AI systems with workflow orchestration frameworks like LangGraph, team architectures often drift into one of two extremes:
 
-1. **Monolithic Framework Coupling**: LangGraph state, nodes, conditional edges, Chroma vector retrieval, Tavily search, and OpenAI SDK calls are all mixed directly into a single script or module. This makes unit testing impossible without live LLMs/APIs, and couples core logic to vendor SDKs.
+1. **Monolithic Framework Coupling**: LangGraph state, nodes, conditional edges, Chroma vector retrieval, Tavily search, and OpenAI SDK calls are all mixed directly into a single script or module. Direct vendor coupling makes application tests dependent on vendor SDK contracts or vendor-specific mocks and mixes orchestration concerns with integration concerns.
 2. **Over-Abstraction**: Hiding LangGraph entirely behind custom, nested wrapper interfaces (e.g., an `IOrchestrator` abstraction hiding state, nodes, and edges). This obscures how LangGraph works, creating cognitive friction for learners wanting to learn LangGraph idioms.
 
 We need an architectural decision that preserves **Clean Architecture provider isolation** while keeping **LangGraph orchestration visible and explicit** for learners.
@@ -37,7 +37,7 @@ Crucially, LangGraph node functions will **not** import or invoke concrete SDKs 
 
 Selected Option 3 balances enterprise maintainability with the repository's educational objectives:
 * Learners can open `corrective_rag.application` and directly study how LangGraph state transitions and conditional edges function.
-* Enterprise maintainers can swap underlying vector stores (Chroma -> Qdrant), LLMs (OpenAI -> Ollama), or search engines (Tavily -> Searxng) in `corrective_rag.infrastructure` without altering graph orchestration logic.
+* Enterprise maintainers can replace underlying vector stores (Chroma -> Qdrant), LLMs (OpenAI -> Ollama), or search providers (Tavily -> alternative) in `corrective_rag.infrastructure` without altering Domain or Application logic, provided the replacement preserves the semantics of the existing port contract. (If a replacement introduces materially different capabilities or contract semantics, the port/application design may legitimately need targeted evolution.)
 
 ## Trade-offs
 
@@ -53,4 +53,4 @@ Selected Option 3 balances enterprise maintainability with the repository's educ
 
 ## Interview Takeaway
 
-"When using agentic frameworks like LangGraph in enterprise applications, we don't hide the orchestration graph behind generic wrappers—doing so masks state transitions and graph routing. Instead, we place graph orchestration in the Application layer, while strictly isolating external AI and data providers (LLMs, vector databases, search APIs) behind Domain ports implemented in Infrastructure. This gives us full visibility into agentic workflows while maintaining testability and vendor independence."
+"When using workflow orchestration frameworks like LangGraph in enterprise applications, we don't hide the graph behind generic wrappers—doing so masks state transitions and graph routing logic. Instead, we place graph orchestration in the Application layer, while strictly isolating external AI and data providers (LLMs, vector databases, search APIs) behind Domain ports implemented in Infrastructure. Provided the replacement preserves port semantics, infrastructure providers can be swapped without rewriting application workflow logic."

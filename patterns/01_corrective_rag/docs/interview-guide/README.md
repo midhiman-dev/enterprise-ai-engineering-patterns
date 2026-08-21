@@ -1,6 +1,6 @@
 # Use Case 01 — Interview Guide
 
-> **Current Status:** Placeholder. Interview questions, short answers, deeper explanations, and trade-off analysis will be populated only after implementation provides empirical evidence and verified traces.
+> **Current Status:** Placeholder. Questions and answers will be populated as implementation proceeds. Claims about repository behavior will be grounded in verified implementation, while production-scale scenarios will be clearly labeled as system design reasoning.
 
 ## Overview
 

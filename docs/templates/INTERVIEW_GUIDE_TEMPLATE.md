@@ -1,6 +1,8 @@
 # Interview Guide Template
 
-This document provides a template for use-case interview guides. Interview questions and answers are written only after code implementation provides verified empirical evidence.
+This document provides a template for use-case interview guides.
+
+> **Evidence Rule:** Claims about repository behavior must be grounded in verified implementation. Production-scale scenarios (such as scaling to 100,000+ documents, millions of chunks, or distributed vector databases) may be discussed as system design reasoning, but must be clearly labeled as unimplemented/unbenchmarked where applicable.
 
 ---
 
@@ -16,14 +18,20 @@ A concise, direct answer (30–60 seconds) suitable for an initial interview res
 #### Deeper Explanation
 Technical deep dive detailing underlying concepts, mechanisms, and trade-offs.
 
-#### How the Repository Implements or Demonstrates This
-Direct references to repository source files, layer boundaries, or tests that prove this pattern.
+#### Repository Evidence
+What does the actual implementation demonstrate? Direct references to repository source files, layer boundaries, or test suites.
+
+#### Production Evolution
+How would the architecture evolve beyond tutorial scale (e.g., scaling from 40 docs to 100,000+ docs, millions of chunks, distributed vector DBs, embedding migration, sharding)?
 
 #### Failure Modes / Trade-offs
 What can go wrong, edge cases, cost implications, or performance bottlenecks.
 
-#### Metrics or Evidence
-Empirical benchmark data, trace evidence, or test logs from the repository.
+#### Metrics / Evaluation
+Empirical benchmark data, trace evidence, or test logs from the repository (where applicable).
+
+#### Evidence Status
+`Implemented` | `Tested` | `Measured` | `Design-only`
 
 #### Likely Follow-up Questions
 Questions interviewers are likely to ask next based on this response.
