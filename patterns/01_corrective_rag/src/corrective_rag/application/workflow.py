@@ -115,7 +115,7 @@ def build_graph(dependencies: WorkflowDependencies) -> CompiledStateGraph:
     workflow.add_node("web_search", make_web_search_node(dependencies))
     workflow.add_node("generate", make_generate_node(dependencies))
     workflow.add_node("hallucination_check", make_hallucination_check_node(dependencies))
-    workflow.add_node("safe_refusal", make_safe_refusal_node(dependencies))
+    workflow.add_node("safe_refusal", make_safe_refusal_node())
 
     # Add workflow execution edges
     workflow.add_edge(START, "retrieve")

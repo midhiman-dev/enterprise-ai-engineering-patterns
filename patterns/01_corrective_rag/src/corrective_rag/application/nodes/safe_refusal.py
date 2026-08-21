@@ -7,17 +7,11 @@ by evidence, returning a deterministic refusal answer with AnswerStatus.UNSUPPOR
 from typing import Callable
 
 from corrective_rag.application.graph_state import GraphState
-from corrective_rag.application.workflow_dependencies import WorkflowDependencies
 from corrective_rag.domain.entities.answer import Answer, AnswerStatus
 
 
-def make_safe_refusal_node(
-    deps: WorkflowDependencies | None = None,
-) -> Callable[[GraphState], dict]:
+def make_safe_refusal_node() -> Callable[[GraphState], dict]:
     """Factory creating the safe_refusal node handler.
-
-    Args:
-        deps: Optional WorkflowDependencies (accepted for uniform factory signature).
 
     Returns:
         Callable node handler compatible with LangGraph.

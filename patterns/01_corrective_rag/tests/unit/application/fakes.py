@@ -73,6 +73,8 @@ class FakeGenerator:
         answers: Sequence[Answer] | None = None,
     ) -> None:
         if answers is not None:
+            if not answers:
+                raise ValueError("answers must contain at least one Answer")
             self._answers = tuple(answers)
         elif answer is not None:
             self._answers = (answer,)
@@ -105,6 +107,8 @@ class FakeHallucinationChecker:
         results: Sequence[bool] | None = None,
     ) -> None:
         if results is not None:
+            if not results:
+                raise ValueError("results must contain at least one boolean result")
             self._results = tuple(results)
         else:
             self._results = (is_supported,)
