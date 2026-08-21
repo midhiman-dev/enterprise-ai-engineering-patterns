@@ -14,10 +14,13 @@ from corrective_rag.application.nodes.grade_documents import make_grade_document
 from corrective_rag.application.nodes.hallucination_check import make_hallucination_check_node
 from corrective_rag.application.nodes.retrieve import make_retrieve_node
 from corrective_rag.application.nodes.rewrite_query import make_rewrite_query_node
+from corrective_rag.application.nodes.safe_refusal import make_safe_refusal_node
 from corrective_rag.application.nodes.web_search import make_web_search_node
 from corrective_rag.application.workflow_dependencies import WorkflowDependencies
 from corrective_rag.domain.entities.decision_trace import DecisionTrace
 from corrective_rag.domain.entities.question import Question
+
+MAX_GENERATION_ATTEMPTS = 2
 
 
 def create_initial_state(
@@ -40,6 +43,7 @@ def create_initial_state(
         "graded_documents": [],
         "answer": None,
         "is_supported": None,
+        "generation_attempts": 0,
         "trace": trace if trace is not None else DecisionTrace(),
     }
 
@@ -61,13 +65,40 @@ def route_after_grading(state: GraphState) -> str:
     return "rewrite_query"
 
 
+def route_after_hallucination_check(state: GraphState) -> str:
+    """Pure conditional routing function evaluated after hallucination check.
+
+    Determines whether the generated answer is grounded/supported by evidence,
+    or if the workflow should attempt regeneration or trigger safe refusal.
+
+    Args:
+        state: Current GraphState after hallucination_check execution.
+
+    Returns:
+        "end" if supported, "generate" if retry budget remains, otherwise "safe_refusal".
+    """
+    if state["is_supported"]:
+        return "end"
+
+    if state.get("generation_attempts", 0) < MAX_GENERATION_ATTEMPTS:
+        return "generate"
+
+    return "safe_refusal"
+
+
 def build_graph(dependencies: WorkflowDependencies) -> CompiledStateGraph:
-    """Builds and compiles the Pass-4 Corrective RAG state graph with web fallback routing.
+    """Builds and compiles the Pass-5 Corrective RAG state graph with retry & refusal routing.
 
     Graph Topology:
         START -> retrieve -> grade_documents
-                    ├── relevant docs -> generate -> hallucination_check -> END
-                    └── no relevant docs -> rewrite_query -> web_search -> generate -> hallucination_check -> END
+                    ├── relevant docs -> generate -> hallucination_check ──┐
+                    └── no relevant docs -> rewrite_query -> web_search -> generate -> hallucination_check ──┤
+                                                                                                              │
+                                                   ┌──────────────────────────────────────────────────────────┘
+                                                   │
+                                                   ├── supported → END
+                                                   ├── retry budget left → generate
+                                                   └── budget exhausted → safe_refusal → END
 
     Args:
         dependencies: Explicit container of domain ports.
@@ -84,6 +115,7 @@ def build_graph(dependencies: WorkflowDependencies) -> CompiledStateGraph:
     workflow.add_node("web_search", make_web_search_node(dependencies))
     workflow.add_node("generate", make_generate_node(dependencies))
     workflow.add_node("hallucination_check", make_hallucination_check_node(dependencies))
+    workflow.add_node("safe_refusal", make_safe_refusal_node(dependencies))
 
     # Add workflow execution edges
     workflow.add_edge(START, "retrieve")
@@ -102,6 +134,18 @@ def build_graph(dependencies: WorkflowDependencies) -> CompiledStateGraph:
     workflow.add_edge("rewrite_query", "web_search")
     workflow.add_edge("web_search", "generate")
     workflow.add_edge("generate", "hallucination_check")
-    workflow.add_edge("hallucination_check", END)
+
+    # Add conditional branching after hallucination verification
+    workflow.add_conditional_edges(
+        "hallucination_check",
+        route_after_hallucination_check,
+        {
+            "end": END,
+            "generate": "generate",
+            "safe_refusal": "safe_refusal",
+        },
+    )
+
+    workflow.add_edge("safe_refusal", END)
 
     return workflow.compile()

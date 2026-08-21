@@ -62,36 +62,60 @@ class FakeRelevanceGrader:
 
 
 class FakeGenerator:
-    """Fake generator returning a predefined Answer and recording call inputs.
+    """Fake generator returning predefined Answer(s) and recording call inputs.
 
     Note: Satisfies Generator port structurally. Does NOT inherit from Generator.
     """
 
-    def __init__(self, answer: Answer | None = None) -> None:
-        self._answer = answer or Answer(
-            text="Fake generated response grounded in evidence.",
-            status=AnswerStatus.ANSWERED,
-        )
+    def __init__(
+        self,
+        answer: Answer | None = None,
+        answers: Sequence[Answer] | None = None,
+    ) -> None:
+        if answers is not None:
+            self._answers = tuple(answers)
+        elif answer is not None:
+            self._answers = (answer,)
+        else:
+            self._answers = (
+                Answer(
+                    text="Fake generated response grounded in evidence.",
+                    status=AnswerStatus.ANSWERED,
+                ),
+            )
         self.received_calls: list[tuple[Question, Sequence[Document]]] = []
 
     def generate(self, question: Question, documents: Sequence[Document]) -> Answer:
         self.received_calls.append((question, tuple(documents)))
-        return self._answer
+        call_index = len(self.received_calls) - 1
+        if call_index < len(self._answers):
+            return self._answers[call_index]
+        return self._answers[-1]
 
 
 class FakeHallucinationChecker:
-    """Fake hallucination checker returning a predefined boolean and recording checks.
+    """Fake hallucination checker returning predefined boolean(s) and recording checks.
 
     Note: Satisfies HallucinationChecker port structurally. Does NOT inherit from HallucinationChecker.
     """
 
-    def __init__(self, is_supported: bool = True) -> None:
-        self._is_supported = is_supported
+    def __init__(
+        self,
+        is_supported: bool = True,
+        results: Sequence[bool] | None = None,
+    ) -> None:
+        if results is not None:
+            self._results = tuple(results)
+        else:
+            self._results = (is_supported,)
         self.received_checks: list[tuple[Answer, Sequence[Document]]] = []
 
     def is_supported(self, answer: Answer, documents: Sequence[Document]) -> bool:
         self.received_checks.append((answer, tuple(documents)))
-        return self._is_supported
+        check_index = len(self.received_checks) - 1
+        if check_index < len(self._results):
+            return self._results[check_index]
+        return self._results[-1]
 
 
 class FakeQueryRewriter:

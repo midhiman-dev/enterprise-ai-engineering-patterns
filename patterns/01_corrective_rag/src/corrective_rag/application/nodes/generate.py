@@ -24,14 +24,18 @@ def make_generate_node(
     def generate(state: GraphState) -> dict:
         question = state["question"]
         evidence_docs = state["documents"]
+        attempts = state.get("generation_attempts", 0) + 1
 
         answer = deps.generator.generate(question, evidence_docs)
 
         state["trace"].add_step(
             name="generate",
-            detail=f"Generated candidate answer from {len(evidence_docs)} documents",
+            detail=f"Generated candidate answer from {len(evidence_docs)} documents (attempt {attempts})",
         )
 
-        return {"answer": answer}
+        return {
+            "answer": answer,
+            "generation_attempts": attempts,
+        }
 
     return generate

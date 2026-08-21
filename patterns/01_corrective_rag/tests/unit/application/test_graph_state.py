@@ -15,6 +15,7 @@ def test_create_initial_state_defaults() -> None:
     assert state["graded_documents"] == []
     assert state["answer"] is None
     assert state["is_supported"] is None
+    assert state["generation_attempts"] == 0
     assert isinstance(state["trace"], DecisionTrace)
     assert len(state["trace"]) == 0
 

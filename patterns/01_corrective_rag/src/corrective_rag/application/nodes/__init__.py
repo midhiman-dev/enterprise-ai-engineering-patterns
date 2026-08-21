@@ -8,6 +8,7 @@ from corrective_rag.application.nodes.grade_documents import make_grade_document
 from corrective_rag.application.nodes.hallucination_check import make_hallucination_check_node
 from corrective_rag.application.nodes.retrieve import make_retrieve_node
 from corrective_rag.application.nodes.rewrite_query import make_rewrite_query_node
+from corrective_rag.application.nodes.safe_refusal import make_safe_refusal_node
 from corrective_rag.application.nodes.web_search import make_web_search_node
 
 __all__ = [
@@ -16,5 +17,6 @@ __all__ = [
     "make_hallucination_check_node",
     "make_retrieve_node",
     "make_rewrite_query_node",
+    "make_safe_refusal_node",
     "make_web_search_node",
 ]

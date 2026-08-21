@@ -29,6 +29,7 @@ class GraphState(TypedDict):
         graded_documents: Evaluation results for each candidate document from relevance grading.
         answer: The candidate answer generated from evidence documents (None until generated).
         is_supported: Grounding verification result (None until checked).
+        generation_attempts: Total number of answer generation calls executed so far.
         trace: Mutable audit log tracking execution steps.
     """
 
@@ -38,4 +39,5 @@ class GraphState(TypedDict):
     graded_documents: list[GradedDocument]
     answer: Answer | None
     is_supported: bool | None
+    generation_attempts: int
     trace: DecisionTrace
