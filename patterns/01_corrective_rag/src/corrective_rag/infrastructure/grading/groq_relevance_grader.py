@@ -1,7 +1,7 @@
 """Groq Relevance Grader Infrastructure Adapter.
 
 Evaluates whether a retrieved document contains evidence useful for answering a question
-using the Groq hosted LLM API with validated structured JSON output.
+using Groq with prompt-constrained JSON and strict response validation.
 
 Structurally satisfies the Domain RelevanceGrader port without exposing Groq SDK
 or provider infrastructure details to Application or Domain layers.

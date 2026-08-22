@@ -1,6 +1,6 @@
 # Use Case 01 — Step-by-Step Tutorial
 
-> **Current Status:** 🟢 **Pass-8 Implemented.** Groq structured relevance grader infrastructure adapter (`GroqRelevanceGrader`), JSON parser/validator (`parse_relevance_result`), message construction (`build_grading_messages`), offline unit tests with handwritten fake client, opt-in live smoke test (`test_groq_relevance_grader_live.py`), and ADR-004 are complete and verified.
+> **Current Status:** 🟢 **Pass-8 Implemented.** Groq relevance grader infrastructure adapter with validated JSON output (`GroqRelevanceGrader`), JSON parser/validator (`parse_relevance_result`), message construction (`build_grading_messages`), offline unit tests with handwritten fake client, opt-in live smoke test (`test_groq_relevance_grader_live.py`), and ADR-004 are complete and verified.
 
 
 ## Overview
@@ -150,9 +150,9 @@ Domain Answer (AnswerStatus.ANSWERED)
 
 ---
 
-## Pass-8 Learning Outline — Groq Structured Relevance Grader
+## Pass-8 Learning Outline — Groq Relevance Grader with Validated JSON Output
 
-Pass-8 demonstrates how document relevance grading is implemented behind the Domain `RelevanceGrader` port using Groq structured LLM evaluation:
+Pass-8 demonstrates how document relevance grading is implemented behind the Domain `RelevanceGrader` port using Groq prompt-constrained JSON and strict application-side validation:
 
 ```text
 query
@@ -166,6 +166,35 @@ GroqRelevanceGrader
 GradedDocument
 ```
 
+### Three Levels of Output Contracts
+
+```text
+Level 1 — Free-form output
+"Yes, this document seems relevant because..."
+          ↓
+    fragile prose parsing
+
+
+Level 2 — Prompt-constrained JSON [CURRENT IMPLEMENTATION]
+Prompt:
+  Return only:
+  {"is_relevant": true|false, "reason": "..."}
+          ↓
+     model text
+          ↓
+    json.loads()
+          ↓
+   strict validation
+
+
+Level 3 — Provider-native structured output [DESIGN-ONLY]
+JSON Schema / response_format
+          ↓
+   provider-constrained generation
+          ↓
+   application validation
+```
+
 ### Key Technical Concepts & Learner Takeaways
 
 1. **Vector Distance $\neq$ Relevance Decision**:
@@ -173,16 +202,20 @@ GradedDocument
    - Vector distance measures mathematical proximity, not task-specific evidence utility. A document can be vector-near while still failing to answer the user's prompt.
    - `RelevanceGrader` performs semantic evidence validation on candidate documents after retrieval.
 
-2. **Machine-Readable Structured Output Contract**:
-   - Prompts Groq for JSON-only output: `{"is_relevant": true|false, "reason": "..."}`.
-   - Strict standard-library validation (`parse_relevance_result`) enforces exact key constraints, boolean type checking, and non-blank string rationales.
-   - Avoids fragile substring matching (e.g. searching for "yes" or "true" in raw prose).
+2. **Prompt-Constrained JSON with Strict Application-Side Validation**:
+   - Prompts Groq for JSON-formatted text: `{"is_relevant": true|false, "reason": "..."}`.
+   - Strict standard-library validation (`parse_relevance_result`) enforces exact key constraints (`{"is_relevant", "reason"}`), boolean type checking (`type(val) is bool`), and non-blank string rationales.
+   - Avoids fragile substring matching (e.g. searching for "yes" or "true" in raw prose) without requiring vendor-specific SDK schema enforcement in the client protocol.
 
-3. **Explicit Score Semantics (`score=None`)**:
+3. **Probabilistic Judgment vs. Deterministic Validation**:
+   - The LLM relevance judgment itself remains **probabilistic**.
+   - What becomes **deterministic** is JSON parsing, type validation, and downstream graph routing once a valid result exists.
+
+4. **Explicit Score Semantics (`score=None`)**:
    - `GradedDocument` is instantiated with `score=None`.
    - Numeric confidence values (0.0–1.0) are omitted until explicitly calibrated domain score semantics are defined.
 
-4. **Operational Failure Isolation**:
+5. **Operational Failure Isolation**:
    - Malformed provider outputs or API failures raise `RuntimeError`.
    - Operational provider errors are NEVER silently converted into `is_relevant=False` decisions.
 
@@ -197,6 +230,7 @@ GradedDocument
 1. **Embedding Proximity vs Semantic Utility**: Vector distance measures high-level topic proximity in embedding space. In complex technical domains, a document often shares broad keywords (e.g. general Kubernetes cluster management) but lacks the specific diagnostic steps or causes required for the prompt.
 2. **Threshold Calibration Instability**: Similarity score distributions vary dramatically across embedding models, vector index configurations, chunking boundaries, and domain query structures. Setting a fixed distance threshold causes high false-positive or false-negative rates.
 3. **Task-Specific Evidence Judgment**: Downstream LLM grading evaluates the candidate document specifically against the user's question, producing an explicit decision (`is_relevant`) alongside a human-auditable rationale (`reason`).
+
 
 ---
 
