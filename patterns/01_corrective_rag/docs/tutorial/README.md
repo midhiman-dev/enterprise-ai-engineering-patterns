@@ -1,6 +1,6 @@
 # Use Case 01 — Step-by-Step Tutorial
 
-> **Current Status:** 🟢 **Pass-8 Implemented.** Groq relevance grader infrastructure adapter with validated JSON output (`GroqRelevanceGrader`), JSON parser/validator (`parse_relevance_result`), message construction (`build_grading_messages`), offline unit tests with handwritten fake client, opt-in live smoke test (`test_groq_relevance_grader_live.py`), and ADR-004 are complete and verified.
+> **Current Status:** 🟢 **Pass-9 Implemented.** Groq query rewriter infrastructure adapter (`GroqQueryRewriter`), message builder (`build_query_rewrite_messages`), offline unit tests with handwritten fake client, opt-in live smoke test (`test_groq_query_rewriter_live.py`), and ADR-005 are complete and verified.
 
 
 ## Overview
@@ -26,7 +26,7 @@ The tutorial follows a deliberate learning sequence designed to isolate framewor
 9. **Chroma Retrieval Adapter** — Concrete vector store implementation of the `Retriever` port (`ChromaRetriever`, `ChromaIndexer`, `DocumentChunker`, `DocumentLoader`). (Implemented)
 10. **Groq Generator Adapter** — Concrete hosted LLM implementation of the `Generator` domain port (`GroqGenerator`, `GroqConfig`, `GroqChatClient`, `GroqSdkChatClient`). (Implemented)
 11. **Groq Relevance Grader** — Concrete implementation of `RelevanceGrader` (`GroqRelevanceGrader`). (Implemented)
-12. **Groq Query Rewriter** — Concrete implementation of `QueryRewriter`.
+12. **Groq Query Rewriter** — Concrete implementation of `QueryRewriter` (`GroqQueryRewriter`). (Implemented)
 
 13. **Groq Hallucination Checker** — Concrete implementation of `HallucinationChecker`.
 14. **Tavily Web Search Adapter** — Concrete implementation of `WebSearchProvider`.
@@ -231,6 +231,106 @@ JSON Schema / response_format
 2. **Threshold Calibration Instability**: Similarity score distributions vary dramatically across embedding models, vector index configurations, chunking boundaries, and domain query structures. Setting a fixed distance threshold causes high false-positive or false-negative rates.
 3. **Task-Specific Evidence Judgment**: Downstream LLM grading evaluates the candidate document specifically against the user's question, producing an explicit decision (`is_relevant`) alongside a human-auditable rationale (`reason`).
 
+---
+
+## Pass-9 Learning Outline — Groq Query Rewriter Infrastructure Adapter
+
+Pass-9 demonstrates how query rewriting is implemented behind the Domain `QueryRewriter` port using the Groq hosted LLM provider.
+
+```text
+Domain Question (Original Intent)
+       │
+       ├───────────────────────────────┐
+       ▼                               ▼
+Relevance Grading              GroqQueryRewriter
+                                       │
+                                       ▼
+                             rewritten search query
+                                       │
+                                       ▼
+                                  Web Search
+                                       │
+                                       ▼
+                                   evidence
+                                       │
+                                       ▼
+                                   Generator
+                                       │
+                                       ▼
+                          ORIGINAL Question + Evidence
+```
+
+### Domain Port Contract
+
+```python
+class QueryRewriter(Protocol):
+    """Port for rewriting questions for optimized retrieval."""
+
+    def rewrite(self, question: Question) -> Question:
+        """Rewrite a question into a refined natural-language retrieval question."""
+        ...
+```
+
+### Infrastructure Adapter Implementation
+
+Excerpts from `GroqQueryRewriter` showing prompt building, execution, and blank-output validation:
+
+```python
+def build_query_rewrite_messages(question: Question) -> list[dict[str, str]]:
+    user_content = (
+        f"Original User Question:\n{question.text}\n\n"
+        "Rewrite the above question into a concise search query for external technical documentation."
+    )
+    return [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": user_content},
+    ]
+
+
+class GroqQueryRewriter:
+    """Concrete Groq implementation of the Domain QueryRewriter port."""
+
+    def __init__(self, config: GroqConfig, client: GroqChatClient) -> None:
+        self._config = config
+        self._client = client
+
+    def rewrite(self, question: Question) -> Question:
+        messages = build_query_rewrite_messages(question)
+        raw_response = self._client.complete(
+            model=self._config.model,
+            messages=messages,
+            temperature=self._config.temperature,
+        )
+
+        if not raw_response or not raw_response.strip():
+            raise RuntimeError("Groq returned an empty rewritten query.")
+
+        return Question(text=raw_response.strip())
+```
+
+### Key Architectural Rules & Takeaways
+
+1. **Query Rewriting is Retrieval Optimization, NOT Answer Generation**:
+   - `question`: Represents user intent. It remains immutable and is preserved in `GraphState["question"]`.
+   - `rewritten_question`: Represents retrieval search strategy. It is stored separately in `GraphState["rewritten_question"]` and used only by web search.
+2. **Defensive Search Prompting**:
+   - Strips conversational phrases while preserving technical entities and version numbers (e.g. `Kubernetes 1.32`).
+   - Does NOT verify or answer whether fictitious premises (e.g. `--enable-quantum-scheduler`) exist.
+3. **Failure Handling**:
+   - Blank provider outputs raise operational `RuntimeError("Groq returned an empty rewritten query.")`.
+   - Operational failures are never silently converted into the original question or a business response.
+
+---
+
+## Interview Guide — Why Not Replace the Original Question with the Rewritten One?
+
+> **Interview Question:** In a Corrective RAG pipeline, why shouldn't you overwrite `state["question"]` with the LLM's rewritten query?
+
+### Answer Strategy
+
+1. **Retrieval Strategy vs. User Intent**: Query rewriting is a probabilistic optimization designed to increase external search engine recall. The rewritten string is optimized for search indexing, not for answering the user's intent.
+2. **Risk of Query Drift**: An LLM rewriter can drop essential context, alter technical terms, or drift from the original request.
+3. **Grounded Answer Generation**: The final `Generator` must produce an answer to what the user *actually asked*. Answering the rewritten search query risks giving a technically accurate answer to a different question.
 
 ---
 
@@ -239,4 +339,3 @@ JSON Schema / response_format
 After completing the reference tutorial, use the [Pattern 01 Learner Assignment](../assignment/ASSIGNMENT.md) to apply **Corrective RAG** independently to a different enterprise technical-support problem.
 
 The assignment intentionally provides only the problem, constraints, and expected learning outcome. Architecture-level learners are expected to make and justify their own implementation, workflow, technology, and evaluation decisions rather than reproduce the Kubernetes reference solution.
-

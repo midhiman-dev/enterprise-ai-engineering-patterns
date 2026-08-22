@@ -1,6 +1,6 @@
 # Use Case 01 — Corrective RAG for Kubernetes Troubleshooting
 
-> **Current Status:** 🟢 **Pass-8 — Groq RelevanceGrader Infrastructure Adapter Implemented.** Groq relevance grader adapter with validated JSON output (`GroqRelevanceGrader`), message construction (`build_grading_messages`), JSON output parser/validator (`parse_relevance_result`), internal result dataclass (`GroqRelevanceResult`), offline unit tests, opt-in live smoke test (`test_groq_relevance_grader_live.py`), and ADR-004 are fully implemented and verified. Query rewriting, hallucination checking, Tavily web search, API, and UI remain stubbed or unimplemented.
+> **Current Status:** 🟢 **Pass-9 — Groq QueryRewriter Infrastructure Adapter Implemented.** Groq query rewriter adapter (`GroqQueryRewriter`), message construction (`build_query_rewrite_messages`), offline unit tests, opt-in live smoke test (`test_groq_query_rewriter_live.py`), and ADR-005 are fully implemented and verified. Hallucination checking, Tavily web search, API, and UI remain stubbed or unimplemented.
 
 
 ---
@@ -83,6 +83,7 @@ Infrastructure (Chroma, Groq, Tavily, Persistence Adapters)
   * [ADR-002: Local Vector Retrieval with Chroma](docs/adrs/ADR-002-local-vector-retrieval-with-chroma.md)
   * [ADR-003: Groq as the Initial Hosted Generation Provider](docs/adrs/ADR-003-groq-hosted-generation-adapter.md)
   * [ADR-004: LLM Relevance Grading with Validated JSON Output](docs/adrs/ADR-004-llm-relevance-grading-with-structured-output.md)
+  * [ADR-005: LLM Query Rewriting for Corrective Retrieval](docs/adrs/ADR-005-llm-query-rewriting-for-corrective-retrieval.md)
 * [Step-by-Step Tutorial](docs/tutorial/README.md)
 * [Learner Assignment — Apply Corrective RAG to a Different Enterprise Support Problem](docs/assignment/ASSIGNMENT.md)
 * [Interview Guide (Placeholder)](docs/interview-guide/README.md)
