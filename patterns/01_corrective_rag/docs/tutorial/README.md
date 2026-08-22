@@ -146,3 +146,11 @@ Domain Answer (AnswerStatus.ANSWERED)
    - **Infrastructure Operational Failure** (e.g. Groq HTTP 500 or rate limit) raises an exception that halts execution or triggers operational retries.
    - **Grounding Business Refusal** (`AnswerStatus.UNSUPPORTED`) occurs when evidence is insufficient or ungrounded, evaluated downstream by `HallucinationChecker`.
    - Infrastructure downtime must NEVER be converted to `AnswerStatus.UNSUPPORTED`.
+
+---
+
+## Apply the Pattern Yourself
+
+After completing the reference tutorial, use the [Pattern 01 Learner Assignment](../assignment/ASSIGNMENT.md) to apply **Corrective RAG** independently to a different enterprise technical-support problem.
+
+The assignment intentionally provides only the problem, constraints, and expected learning outcome. Architecture-level learners are expected to make and justify their own implementation, workflow, technology, and evaluation decisions rather than reproduce the Kubernetes reference solution.
