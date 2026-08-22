@@ -1,6 +1,6 @@
 # Use Case 01 — Corrective RAG for Kubernetes Troubleshooting
 
-> **Current Status:** 🟢 **Pass-7 — Groq Generator Infrastructure Adapter Implemented.** Groq hosted LLM adapter (`GroqGenerator`), configuration model/loader (`GroqConfig`, `load_groq_config_from_env`), internal client protocol/wrapper (`GroqChatClient`, `GroqSdkChatClient`), prompt message construction (`build_generation_messages`), offline unit tests, opt-in live smoke test (`test_groq_generator_live.py`), and ADR-003 are fully implemented and verified. Relevance grading, query rewriting, hallucination checking, Tavily web search, API, and UI remain stubbed or unimplemented.
+> **Current Status:** 🟢 **Pass-8 — Groq RelevanceGrader Infrastructure Adapter Implemented.** Groq structured relevance grader adapter (`GroqRelevanceGrader`), message construction (`build_grading_messages`), JSON output parser/validator (`parse_relevance_result`), internal result dataclass (`GroqRelevanceResult`), offline unit tests, opt-in live smoke test (`test_groq_relevance_grader_live.py`), and ADR-004 are fully implemented and verified. Query rewriting, hallucination checking, Tavily web search, API, and UI remain stubbed or unimplemented.
 
 
 ---
@@ -82,6 +82,7 @@ Infrastructure (Chroma, Groq, Tavily, Persistence Adapters)
   * [ADR-001: Clean Architecture and LangGraph Boundary](docs/adrs/ADR-001-clean-architecture-and-langgraph-boundary.md)
   * [ADR-002: Local Vector Retrieval with Chroma](docs/adrs/ADR-002-local-vector-retrieval-with-chroma.md)
   * [ADR-003: Groq as the Initial Hosted Generation Provider](docs/adrs/ADR-003-groq-hosted-generation-adapter.md)
+  * [ADR-004: LLM-Based Relevance Grading with Structured Output](docs/adrs/ADR-004-llm-relevance-grading-with-structured-output.md)
 * [Step-by-Step Tutorial](docs/tutorial/README.md)
 * [Learner Assignment — Apply Corrective RAG to a Different Enterprise Support Problem](docs/assignment/ASSIGNMENT.md)
 * [Interview Guide (Placeholder)](docs/interview-guide/README.md)

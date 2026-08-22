@@ -1,6 +1,6 @@
 # Use Case 01 — Step-by-Step Tutorial
 
-> **Current Status:** 🟢 **Pass-7 Implemented.** Groq hosted LLM generation infrastructure adapter (`GroqGenerator`), configuration model/loader (`GroqConfig`, `load_groq_config_from_env`), internal client protocol and wrapper (`GroqChatClient`, `GroqSdkChatClient`), prompt message construction (`build_generation_messages`), offline unit tests with handwritten fake client, opt-in live smoke test (`test_groq_generator_live.py`), and ADR-003 are complete and verified.
+> **Current Status:** 🟢 **Pass-8 Implemented.** Groq structured relevance grader infrastructure adapter (`GroqRelevanceGrader`), JSON parser/validator (`parse_relevance_result`), message construction (`build_grading_messages`), offline unit tests with handwritten fake client, opt-in live smoke test (`test_groq_relevance_grader_live.py`), and ADR-004 are complete and verified.
 
 
 ## Overview
@@ -25,8 +25,9 @@ The tutorial follows a deliberate learning sequence designed to isolate framewor
 8. **Bounded Grounding Retry & Safe Refusal** — Adding bounded generation retries and safe refusal routing for ungrounded answers. (Implemented)
 9. **Chroma Retrieval Adapter** — Concrete vector store implementation of the `Retriever` port (`ChromaRetriever`, `ChromaIndexer`, `DocumentChunker`, `DocumentLoader`). (Implemented)
 10. **Groq Generator Adapter** — Concrete hosted LLM implementation of the `Generator` domain port (`GroqGenerator`, `GroqConfig`, `GroqChatClient`, `GroqSdkChatClient`). (Implemented)
-11. **Groq Relevance Grader** — Concrete implementation of `RelevanceGrader`.
+11. **Groq Relevance Grader** — Concrete implementation of `RelevanceGrader` (`GroqRelevanceGrader`). (Implemented)
 12. **Groq Query Rewriter** — Concrete implementation of `QueryRewriter`.
+
 13. **Groq Hallucination Checker** — Concrete implementation of `HallucinationChecker`.
 14. **Tavily Web Search Adapter** — Concrete implementation of `WebSearchProvider`.
 15. **Decision Trace Persistence** — SQLite storage implementation of `DecisionTraceRepository`.
@@ -149,8 +150,59 @@ Domain Answer (AnswerStatus.ANSWERED)
 
 ---
 
+## Pass-8 Learning Outline — Groq Structured Relevance Grader
+
+Pass-8 demonstrates how document relevance grading is implemented behind the Domain `RelevanceGrader` port using Groq structured LLM evaluation:
+
+```text
+query
+  ↓
+Chroma top-k candidates
+  ↓
+one candidate
+  ↓
+GroqRelevanceGrader
+  ↓
+GradedDocument
+```
+
+### Key Technical Concepts & Learner Takeaways
+
+1. **Vector Distance $\neq$ Relevance Decision**:
+   - Chroma vector retrieval optimizes candidate recall using embedding similarity distance.
+   - Vector distance measures mathematical proximity, not task-specific evidence utility. A document can be vector-near while still failing to answer the user's prompt.
+   - `RelevanceGrader` performs semantic evidence validation on candidate documents after retrieval.
+
+2. **Machine-Readable Structured Output Contract**:
+   - Prompts Groq for JSON-only output: `{"is_relevant": true|false, "reason": "..."}`.
+   - Strict standard-library validation (`parse_relevance_result`) enforces exact key constraints, boolean type checking, and non-blank string rationales.
+   - Avoids fragile substring matching (e.g. searching for "yes" or "true" in raw prose).
+
+3. **Explicit Score Semantics (`score=None`)**:
+   - `GradedDocument` is instantiated with `score=None`.
+   - Numeric confidence values (0.0–1.0) are omitted until explicitly calibrated domain score semantics are defined.
+
+4. **Operational Failure Isolation**:
+   - Malformed provider outputs or API failures raise `RuntimeError`.
+   - Operational provider errors are NEVER silently converted into `is_relevant=False` decisions.
+
+---
+
+## Interview Guide — Why Not Just Use Similarity Score for Document Relevance?
+
+> **Interview Question:** Why does CRAG introduce a downstream LLM Relevance Grader instead of relying on Chroma's similarity score distance threshold?
+
+### Answer Strategy
+
+1. **Embedding Proximity vs Semantic Utility**: Vector distance measures high-level topic proximity in embedding space. In complex technical domains, a document often shares broad keywords (e.g. general Kubernetes cluster management) but lacks the specific diagnostic steps or causes required for the prompt.
+2. **Threshold Calibration Instability**: Similarity score distributions vary dramatically across embedding models, vector index configurations, chunking boundaries, and domain query structures. Setting a fixed distance threshold causes high false-positive or false-negative rates.
+3. **Task-Specific Evidence Judgment**: Downstream LLM grading evaluates the candidate document specifically against the user's question, producing an explicit decision (`is_relevant`) alongside a human-auditable rationale (`reason`).
+
+---
+
 ## Apply the Pattern Yourself
 
 After completing the reference tutorial, use the [Pattern 01 Learner Assignment](../assignment/ASSIGNMENT.md) to apply **Corrective RAG** independently to a different enterprise technical-support problem.
 
 The assignment intentionally provides only the problem, constraints, and expected learning outcome. Architecture-level learners are expected to make and justify their own implementation, workflow, technology, and evaluation decisions rather than reproduce the Kubernetes reference solution.
+
