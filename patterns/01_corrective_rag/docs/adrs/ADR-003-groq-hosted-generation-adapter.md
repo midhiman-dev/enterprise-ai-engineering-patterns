@@ -43,7 +43,9 @@ We adopt **Groq** (via the official `groq` Python SDK) as the initial concrete h
 * **Positive**:
   * Learners can execute candidate answer generation using hosted models on a free tier.
   * Graph execution tests remain completely offline and deterministic using fake client injection.
-  * Replacing Groq with another generator provider (e.g. OpenAI or Ollama) requires zero changes to Domain ports or Application graph nodes.
+  * Replacing Groq with another generator provider (e.g. OpenAI or Ollama) requires zero changes to Domain ports or Application graph nodes, provided the replacement provider preserves the semantics of the existing `Generator` port contract.
+  * *Note on Contract Evolution*: Dependency inversion isolates vendor implementation details, but it does not mean all providers are behaviorally interchangeable without contract changes. Materially different capability requirements (such as token streaming, structured JSON output, multimodal inputs, native tool calling, or citation metadata) would legitimately require evolving the Domain port contract.
+
 * **Negative / Risks**:
   * Live smoke tests depend on external Groq API availability and network connectivity.
 

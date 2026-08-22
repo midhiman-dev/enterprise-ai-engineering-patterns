@@ -86,4 +86,4 @@ class GroqSdkChatClient:
             content = response.choices[0].message.content
             return content if content is not None else ""
         except Exception as exc:
-            raise RuntimeError(f"Groq API generation request failed: {exc}") from exc
+            raise RuntimeError("Groq API generation request failed.") from exc

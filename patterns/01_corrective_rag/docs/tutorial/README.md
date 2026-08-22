@@ -112,3 +112,37 @@ Changing an embedding model in production requires a controlled migration strate
 5. **Zero-Downtime Cutover & Rollback**: Update the retrieval adapter configuration to point to the new collection while retaining the old index for immediate rollback capabilities.
 
 > *Design guidance — not implemented in Pass-6A*
+
+---
+
+## Pass-7 Learning Outline — Groq Generator Infrastructure
+
+Pass-7 demonstrates how candidate generation is implemented behind the Domain `Generator` port using the Groq hosted LLM provider:
+
+```text
+Domain Question + Document[]
+      ↓
+GroqGenerator (Prompt Construction)
+      ↓
+GroqChatClient (Infrastructure Protocol)
+      ↓
+GroqSdkChatClient (Groq SDK)
+      ↓
+Domain Answer (AnswerStatus.ANSWERED)
+```
+
+### Key Technical Concepts & Learner Takeaways
+
+1. **Offline-First Testing & Opt-In Live Smoke Tests**:
+   - `python -m pytest`: Default execution runs 100% offline unit/integration tests without requiring network access or `GROQ_API_KEY`.
+   - `python -m pytest tests/live -m live -o addopts="" -v`: Explicit command to run opt-in live API smoke tests against real Groq endpoints.
+   - Live tests are excluded by default because external APIs introduce network dependency, rate limits, secret requirements, and non-deterministic execution into CI suites.
+
+2. **Safe Error Wrapping vs Exception Chaining**:
+   - Outer `RuntimeError` contains a static, safe error message (`"Groq API generation request failed."`), excluding raw provider/connection error details that might leak tokens or network topologies.
+   - Exception cause (`__cause__`) preserves the full underlying exception for debugging.
+
+3. **Provider Operational Failure != Unsupported Business Answer**:
+   - **Infrastructure Operational Failure** (e.g. Groq HTTP 500 or rate limit) raises an exception that halts execution or triggers operational retries.
+   - **Grounding Business Refusal** (`AnswerStatus.UNSUPPORTED`) occurs when evidence is insufficient or ungrounded, evaluated downstream by `HallucinationChecker`.
+   - Infrastructure downtime must NEVER be converted to `AnswerStatus.UNSUPPORTED`.
