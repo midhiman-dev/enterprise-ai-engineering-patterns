@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Vector Store Data
+**/data/chroma/
+*.chroma

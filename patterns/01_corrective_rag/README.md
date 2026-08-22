@@ -1,6 +1,7 @@
 # Use Case 01 — Corrective RAG for Kubernetes Troubleshooting
 
-> **Current Status:** 🟢 **Pass-5 — Bounded Hallucination Retry and Safe Refusal Implemented.** All three golden query scenarios (local retrieval success, web search fallback, and fabricated premise safe refusal) are fully implemented and verified with deterministic in-memory fakes. LangGraph state (`GraphState`), workflow nodes (`retrieve`, `grade_documents`, `rewrite_query`, `web_search`, `generate`, `hallucination_check`, `safe_refusal`), conditional routing (`route_after_grading`, `route_after_hallucination_check`), bounded retry policy (`MAX_GENERATION_ATTEMPTS = 2`), and unit tests are complete. Real infrastructure adapters (Chroma, OpenAI/Ollama, Tavily), persistence, API, and UI are not yet implemented.
+> **Current Status:** 🟢 **Pass-6 — Local Chroma Retrieval Infrastructure Implemented.** Local document loading (`DocumentLoader`), chunking (`DocumentChunker`), local embeddings, Chroma indexing (`ChromaIndexer`), and `ChromaRetriever` adapter implementing the `Retriever` domain port are fully implemented and verified with offline integration tests. Knowledge base fixture (`data/kb_snapshot/`), build script (`scripts/build_kb_index.py`), and ADR-002 are complete. Real LLM generation, Tavily web search, relevance grading, query rewriting, API, and UI remain stubbed or unimplemented.
+
 
 
 ---

@@ -1,6 +1,6 @@
 # Use Case 01 — Step-by-Step Tutorial
 
-> **Current Status:** 🟢 **Pass-5 Implemented.** Domain entities, domain ports, LangGraph state (`GraphState`), workflow nodes (`retrieve`, `grade_documents`, `rewrite_query`, `web_search`, `generate`, `hallucination_check`, `safe_refusal`), conditional routing (`route_after_grading`, `route_after_hallucination_check`), bounded retry policy (`MAX_GENERATION_ATTEMPTS = 2`), handwritten deterministic fakes, and application unit tests across all three golden query paths are implemented and verified.
+> **Current Status:** 🟢 **Pass-6 Implemented.** Local KB document loading (`DocumentLoader`), paragraph/character-aware chunking (`DocumentChunker`), local embeddings (`DeterministicTestEmbeddingFunction`, `DefaultLocalEmbeddingFunction`), Chroma vector store indexing (`ChromaIndexer`), and concrete `ChromaRetriever` adapter implementing the `Retriever` domain port are fully implemented and verified with offline integration tests. Knowledge-base fixture (`data/kb_snapshot/`), build script (`scripts/build_kb_index.py`), and ADR-002 are complete.
 
 
 ## Overview
@@ -23,7 +23,7 @@ The tutorial follows a deliberate learning sequence designed to isolate framewor
 6. **Straight-Path Routing Unit Tests** — Testing the straight-through graph execution path deterministically using handwritten fakes. (Implemented)
 7. **Query Rewriting & Web Search Routing** — Adding stale-KB detection and web fallback routing branches. (Implemented)
 8. **Bounded Grounding Retry & Safe Refusal** — Adding bounded generation retries and safe refusal routing for ungrounded answers. (Implemented)
-9. **Chroma Retrieval Adapter** — Concrete vector store implementation of the `Retriever` port.
+9. **Chroma Retrieval Adapter** — Concrete vector store implementation of the `Retriever` port (`ChromaRetriever`, `ChromaIndexer`, `DocumentChunker`, `DocumentLoader`). (Implemented)
 10. **OpenAI / Ollama AI Adapters** — Concrete LLM implementations of `Generator`, `RelevanceGrader`, and `HallucinationChecker`.
 11. **Tavily Web Search Adapter** — Concrete implementation of `WebSearchProvider`.
 12. **Decision Trace Persistence** — SQLite storage implementation of `DecisionTraceRepository`.
@@ -33,10 +33,62 @@ The tutorial follows a deliberate learning sequence designed to isolate framewor
 16. **Decision Trace Inspection** — Auditing system decisions across local vs. web fallback routes.
 17. **Production Evolution & Interview Lessons** — System design trade-offs and scaling strategies.
 
-> **Learner Note on Question Semantics:** The original user question (`question`) is preserved in state throughout execution, while a separate search query reformulation (`rewritten_question`) is generated and passed only to external web search. Answer generation still receives the original user question to ensure the generated response directly addresses the user's intent.
+---
 
-> **Learner Note on Retry Safety & Loop Termination:** Corrective loops require explicit termination conditions. This workflow enforces `MAX_GENERATION_ATTEMPTS = 2` for candidate generation; if grounding verification continues to fail, the workflow executes `safe_refusal` returning an `UNSUPPORTED` answer rather than looping indefinitely or shipping an unsupported candidate answer to the user.
+## Pass-6 Learning Outline — Ingestion & Chroma Retrieval
 
-> **Interview Note — Why Not Retry Forever?** Probabilistic AI models and evaluation components offer no convergence guarantees. Unbounded retry loops incur unpredictable latency and costs without guaranteeing success. Enterprise systems enforce bounded retry budgets paired with deterministic fallback responses.
+Pass-6 demonstrates how source documents travel through the local ingestion and vector retrieval pipeline:
 
-> **Pedagogical Rationale:** Learners should first understand workflow orchestration independently of external APIs. LangGraph routing must be executable and testable using controlled fake implementations before introducing provider integration complexity. Handwritten fakes make workflow testing deterministic and isolate orchestration logic from network and vendor API variability.
+```text
+source documents
+      ↓
+document loader
+      ↓
+chunker (chunk_size, chunk_overlap)
+      ↓
+embedding function
+      ↓
+index in Chroma collection
+      ↓
+semantic query
+      ↓
+top-k candidate matches
+      ↓
+provider-neutral Domain Document[]
+```
+
+### Key Technical Concepts
+* **Source Document vs. Chunk**: Raw source files (`data/kb_snapshot/*.md`) are high-level units of knowledge. They must be split into bounded text chunks before embedding because vector distance calculations perform poorly over multi-page texts with disparate topics.
+* **Chunk Size & Overlap**: `chunk_size` defines the upper character bound for semantic focus, while `chunk_overlap` preserves context continuity across adjacent chunk boundaries.
+* **Deterministic Chunk Identifiers**: Each chunk receives a stable ID (`<source>::chunk_<index>`), ensuring idempotent and repeatable vector store indexing runs.
+* **Candidate Retrieval vs. Relevance Grading**: `ChromaRetriever.retrieve()` performs *candidate selection* based on nearest-neighbor vector distance in semantic embedding space. It retrieves the top `top_k` candidate chunks. Vector distance alone is not proof of factual relevance for answering the question—which is why the downstream `RelevanceGrader` node still evaluates candidates against the question.
+
+---
+
+## Interview Guide — Candidate Retrieval Failures
+
+> **Interview Question:** What if the correct document exists in the knowledge base, but vector retrieval fails to return it?
+
+### Diagnostic Sequence
+1. **Ingestion Verification**: Is the source document actually ingested in the target Chroma collection?
+2. **Chunking Strategy**: Was the critical fact split across a chunk boundary or truncated by chunk size limits?
+3. **Embedding Representation**: Did the vector embedding capture the domain-specific terms (e.g. `CrashLoopBackOff`, error codes)?
+4. **Top-K Parameter**: Was `top_k` set too low (e.g., `top_k=2` when relevant evidence ranked 3rd or 4th)?
+5. **Metadata Filters**: Were metadata filters mistakenly excluding valid document categories?
+6. **Hybrid Retrieval**: Would combining vector search with BM25 keyword matching improve recall for exact technical terms?
+7. **Cross-Encoder Reranking**: Would a cross-encoder reranker placed after candidate retrieval improve document ordering?
+8. **Evaluation Benchmarks**: Is retrieval recall being measured explicitly using hit-rate or MRR metrics on golden evaluation datasets?
+
+---
+
+## Architecture Scaling Note — Ingestion at 100,000 Documents
+
+> *Design-only — not implemented in Pass-6*
+
+How would this ingestion and retrieval architecture evolve from a small local test fixture to an enterprise dataset of 100,000+ documents?
+
+1. **Distributed Asynchronous Ingestion**: Replace sequential script execution (`build_kb_index.py`) with background worker queues (e.g. Celery / Kafka) processing document loading, chunking, and embedding in parallel.
+2. **Incremental Indexing & Change Data Capture**: Track document file hashes / timestamps so only updated or added documents trigger re-chunking and re-embedding.
+3. **Distributed Vector Database**: Migrate from single-node local disk Chroma to distributed cluster deployments (e.g., Milvus, Qdrant, Pinecone, or PostgreSQL with `pgvector`).
+4. **Hybrid Lexical + Dense Retrieval**: Combine dense semantic embeddings with sparse BM25 indexing (e.g. Elasticsearch / Meilisearch) to capture both semantic intent and exact technical error codes.
+5. **Two-Stage Retrieval & Reranking**: Retrieve top 50–100 candidates via fast vector/hybrid search, then pass candidate pairs to a Cohere / BGE cross-encoder reranker to pick the top 4–6 highest-quality documents for LLM context generation.

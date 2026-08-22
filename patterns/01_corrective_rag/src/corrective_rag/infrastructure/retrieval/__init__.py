@@ -1,4 +1,5 @@
-"""Infrastructure Retrieval package.
+"""Retrieval infrastructure package containing vector store adapters."""
 
-Will contain concrete implementations of the Retriever port (e.g., ChromaVectorRetriever).
-"""
+from corrective_rag.infrastructure.retrieval.chroma_retriever import ChromaRetriever
+
+__all__ = ["ChromaRetriever"]
