@@ -10,6 +10,7 @@ from corrective_rag.infrastructure.search.groq_query_rewriter import (
     build_query_rewrite_messages,
 )
 from corrective_rag.infrastructure.search.tavily_client import (
+    TAVILY_SEARCH_DEPTH,
     TavilySdkSearchClient,
     TavilySearchClient,
 )
@@ -25,6 +26,7 @@ from corrective_rag.infrastructure.search.tavily_web_search_provider import (
 __all__ = [
     "DEFAULT_TAVILY_MAX_RESULTS",
     "GroqQueryRewriter",
+    "TAVILY_SEARCH_DEPTH",
     "TavilyConfig",
     "TavilySdkSearchClient",
     "TavilySearchClient",

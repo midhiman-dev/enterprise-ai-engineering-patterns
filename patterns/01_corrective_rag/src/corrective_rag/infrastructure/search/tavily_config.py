@@ -8,7 +8,6 @@ from dataclasses import dataclass
 import os
 
 DEFAULT_TAVILY_MAX_RESULTS = 5
-DEFAULT_TAVILY_SEARCH_DEPTH = "basic"
 
 
 @dataclass(frozen=True)
@@ -18,12 +17,10 @@ class TavilyConfig:
     Attributes:
         api_key: Secret API key for Tavily search API authentication.
         max_results: Maximum number of search results to retrieve (must be > 0).
-        search_depth: Tavily search depth strategy (e.g. 'basic').
     """
 
     api_key: str
     max_results: int = DEFAULT_TAVILY_MAX_RESULTS
-    search_depth: str = DEFAULT_TAVILY_SEARCH_DEPTH
 
     def __post_init__(self) -> None:
         if not self.api_key or not self.api_key.strip():
@@ -66,5 +63,4 @@ def load_tavily_config_from_env() -> TavilyConfig:
     return TavilyConfig(
         api_key=api_key,
         max_results=max_results,
-        search_depth=DEFAULT_TAVILY_SEARCH_DEPTH,
     )

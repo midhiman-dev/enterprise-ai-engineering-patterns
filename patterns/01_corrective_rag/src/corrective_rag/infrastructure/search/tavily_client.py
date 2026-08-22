@@ -8,6 +8,8 @@ from typing import Any, Protocol
 
 from tavily import TavilyClient
 
+TAVILY_SEARCH_DEPTH = "basic"
+
 
 class TavilySearchClient(Protocol):
     """Internal infrastructure protocol for Tavily search operations.
@@ -43,6 +45,9 @@ class TavilySdkSearchClient:
     def search(self, query: str, max_results: int) -> dict[str, Any]:
         """Executes search request using the official Tavily SDK.
 
+        Fixed adapter policy:
+            Uses Tavily basic search depth for low-cost, predictable technical documentation retrieval.
+
         Args:
             query: Exact query string to execute.
             max_results: Max result count constraint.
@@ -53,5 +58,5 @@ class TavilySdkSearchClient:
         return self._client.search(
             query=query,
             max_results=max_results,
-            search_depth="basic",
+            search_depth=TAVILY_SEARCH_DEPTH,
         )

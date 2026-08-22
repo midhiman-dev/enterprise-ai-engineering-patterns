@@ -374,7 +374,6 @@ Excerpts from `TavilyConfig` and `TavilyWebSearchProvider` showing configuration
 class TavilyConfig:
     api_key: str
     max_results: int = DEFAULT_TAVILY_MAX_RESULTS
-    search_depth: str = DEFAULT_TAVILY_SEARCH_DEPTH
 
     def __post_init__(self) -> None:
         if not self.api_key or not self.api_key.strip():
@@ -440,7 +439,7 @@ class TavilyWebSearchProvider:
    - `question.text` is forwarded directly as the query string without modifying the original question object.
    - Tavily-specific response dictionaries and scores (`score`) are mapped to provider-neutral `Document` entities inside the Infrastructure layer.
 2. **Search Engine Ranking Score $\neq$ Downstream Relevance Grade**:
-   - Tavily search ranking scores (`score`) reflect keyword match quality according to Tavily index heuristics.
+   - Tavily result scores (`score`) are provider-returned result scores.
    - Downstream `RelevanceGrader` and `Generator` nodes remain authoritative for evaluating semantic relevance and evidence grounding. Tavily scores are preserved strictly in `Document.metadata["tavily_score"]`.
 3. **Failure Differentiation**:
    - Empty search results (`{"results": []}`) return an empty list `[]` cleanly.
@@ -456,7 +455,7 @@ class TavilyWebSearchProvider:
 
 1. **Trust & Data Hygiene**: Local vector storage operates over curated, internal enterprise documentation. External web search retrieves untrusted external web content requiring strict isolation to prevent indirect prompt injection and data leakage.
 2. **Privacy Policy Checks**: Before invoking external search APIs, production systems require PII detection and allowlist filtering to prevent accidental leakage of sensitive internal terms or infrastructure names.
-3. **Score Semantics**: Vector similarity distance measures embedding-space proximity, whereas web search engine scores measure provider-specific keyword indexing relevance. Neither score replaces explicit LLM relevance grading and hallucination verification.
+3. **Score Semantics**: Vector similarity distance measures embedding-space proximity, whereas a Tavily result score is provider-defined retrieval metadata. Neither score replaces explicit LLM relevance grading and hallucination verification.
 
 ---
 

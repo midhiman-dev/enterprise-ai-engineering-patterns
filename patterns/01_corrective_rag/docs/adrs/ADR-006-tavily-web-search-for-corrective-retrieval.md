@@ -35,7 +35,7 @@ We select **Tavily Search API** (`TavilyWebSearchProvider`) as the primary infra
 1. **Strict Domain Port Isolation**:
    `TavilyWebSearchProvider` structurally implements `WebSearchProvider` (`search(question: Question) -> Sequence[Document]`). Neither the Domain entities nor the LangGraph Application nodes import Tavily SDK objects, response dictionaries, or vendor-specific exceptions.
 2. **Provider Ranking Score != Answer Relevance**:
-   Tavily returns a numeric search ranking score (`score`). This score represents keyword and web-search index relevance within Tavily's internal engine. It **MUST NOT** be treated as equivalent to a downstream semantic `RelevanceGrader` decision or hallucination metric. It is preserved strictly as provider metadata (`Document.metadata["tavily_score"]`).
+   Tavily may return a provider-defined score with search results. The application does not assume that this score is calibrated semantic relevance for the user's question. It **MUST NOT** be treated as equivalent to a downstream semantic `RelevanceGrader` decision or hallucination metric. It is preserved strictly as provider metadata (`Document.metadata["tavily_score"]`).
 3. **Operational Failure vs. Empty Search Distinction**:
    - **Tavily returns zero results (`{"results": []}`)**: Valid retrieval outcome. Returns `[]` cleanly. The graph proceeds with available state.
    - **Tavily API unavailable / rate limited / unauthorized**: Operational failure. Raises a generic `RuntimeError("Tavily search request failed.")` chained with `from exc` to preserve observability.
@@ -82,4 +82,4 @@ In enterprise production deployments, external web retrieval requires additional
 > **Answer**: An empty result set is a valid search outcome, not an infrastructure exception. The search adapter returns an empty sequence `[]`. The graph proceeds down the fallback or safe-refusal path based on available evidence rather than throwing operational errors.
 
 ### Q3: "Does a high search engine score guarantee the retrieved document is relevant?"
-> **Answer**: No. Search engine scores measure index-level keyword matching and domain authority according to the search provider's heuristics. Downstream LLM-based relevance grading and hallucination checking evaluate whether the content actually grounds the specific user question.
+> **Answer**: No. A Tavily result score is provider-defined retrieval metadata. I would not treat it as equivalent to my application's relevance grade or grounding decision. Those are separate stages with different semantics.

@@ -17,7 +17,6 @@ def test_tavily_config_valid() -> None:
     config = TavilyConfig(api_key="tvly-test-key-123", max_results=10)
     assert config.api_key == "tvly-test-key-123"
     assert config.max_results == 10
-    assert config.search_depth == "basic"
 
 
 def test_tavily_config_missing_api_key_raises() -> None:
