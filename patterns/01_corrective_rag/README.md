@@ -22,7 +22,7 @@ In realistic enterprise environments, internal knowledge bases (e.g., local vect
 This pattern simulates that exact challenge:
 * **Knowledge Corpus:** 30–40 official Kubernetes troubleshooting documents frozen as a snapshot.
 * **Failure Condition:** Questions about newer Kubernetes features (or absent topics) cannot be reliably answered from local retrieval alone.
-* **CRAG Mitigation:** The workflow detects inadequate local retrieval, dynamically queries live web search (e.g., Tavily), and grounds answers against combined evidence.
+* **CRAG Mitigation:** The workflow detects inadequate local retrieval, dynamically queries live web search (e.g. Tavily), and grounds answers against combined evidence.
 
 ---
 
@@ -83,4 +83,5 @@ Infrastructure (Chroma, Groq, Tavily, Persistence Adapters)
   * [ADR-002: Local Vector Retrieval with Chroma](docs/adrs/ADR-002-local-vector-retrieval-with-chroma.md)
   * [ADR-003: Groq as the Initial Hosted Generation Provider](docs/adrs/ADR-003-groq-hosted-generation-adapter.md)
 * [Step-by-Step Tutorial](docs/tutorial/README.md)
+* [Learner Assignment — Apply Corrective RAG to a Different Enterprise Support Problem](docs/assignment/ASSIGNMENT.md)
 * [Interview Guide (Placeholder)](docs/interview-guide/README.md)
