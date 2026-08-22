@@ -1,6 +1,6 @@
 # Use Case 01 — Corrective RAG for Kubernetes Troubleshooting
 
-> **Current Status:** 🟢 **Pass-9 — Groq QueryRewriter Infrastructure Adapter Implemented.** Groq query rewriter adapter (`GroqQueryRewriter`), message construction (`build_query_rewrite_messages`), offline unit tests, opt-in live smoke test (`test_groq_query_rewriter_live.py`), and ADR-005 are fully implemented and verified. Hallucination checking, Tavily web search, API, and UI remain stubbed or unimplemented.
+> **Current Status:** 🟢 **Pass-10 — Tavily WebSearchProvider Infrastructure Adapter Implemented.** Tavily web search adapter (`TavilyWebSearchProvider`), config loader (`TavilyConfig`), client abstraction (`TavilySearchClient`), offline unit tests, opt-in live smoke test (`test_tavily_web_search_live.py`), and ADR-006 are fully implemented and verified. Implemented real adapters now include Chroma Retriever, Groq Generator, Groq RelevanceGrader, Groq QueryRewriter, and Tavily WebSearchProvider. Hallucination checking, full graph composition root, API, and UI remain to be wired in subsequent passes.
 
 
 ---
@@ -84,6 +84,7 @@ Infrastructure (Chroma, Groq, Tavily, Persistence Adapters)
   * [ADR-003: Groq as the Initial Hosted Generation Provider](docs/adrs/ADR-003-groq-hosted-generation-adapter.md)
   * [ADR-004: LLM Relevance Grading with Validated JSON Output](docs/adrs/ADR-004-llm-relevance-grading-with-structured-output.md)
   * [ADR-005: LLM Query Rewriting for Corrective Retrieval](docs/adrs/ADR-005-llm-query-rewriting-for-corrective-retrieval.md)
+  * [ADR-006: Tavily Web Search for Corrective Retrieval](docs/adrs/ADR-006-tavily-web-search-for-corrective-retrieval.md)
 * [Step-by-Step Tutorial](docs/tutorial/README.md)
 * [Learner Assignment — Apply Corrective RAG to a Different Enterprise Support Problem](docs/assignment/ASSIGNMENT.md)
 * [Interview Guide (Placeholder)](docs/interview-guide/README.md)

@@ -9,3 +9,4 @@ This directory captures architectural decisions for Use Case 01 (Corrective RAG 
 * [ADR-003: Groq as the Initial Hosted Generation Provider](ADR-003-groq-hosted-generation-adapter.md) — *Accepted*
 * [ADR-004: LLM Relevance Grading with Validated JSON Output](ADR-004-llm-relevance-grading-with-structured-output.md) — *Accepted*
 * [ADR-005: LLM Query Rewriting for Corrective Retrieval](ADR-005-llm-query-rewriting-for-corrective-retrieval.md) — *Accepted*
+* [ADR-006: Tavily Web Search for Corrective Retrieval](ADR-006-tavily-web-search-for-corrective-retrieval.md) — *Accepted*

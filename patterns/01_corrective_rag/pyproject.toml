@@ -12,6 +12,7 @@ dependencies = [
     "langgraph",
     "chromadb",
     "groq",
+    "tavily-python",
 ]
 
 [tool.setuptools.packages.find]

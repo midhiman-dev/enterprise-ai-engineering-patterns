@@ -1,6 +1,6 @@
 # Use Case 01 — Step-by-Step Tutorial
 
-> **Current Status:** 🟢 **Pass-9 Implemented.** Groq query rewriter infrastructure adapter (`GroqQueryRewriter`), message builder (`build_query_rewrite_messages`), offline unit tests with handwritten fake client, opt-in live smoke test (`test_groq_query_rewriter_live.py`), and ADR-005 are complete and verified.
+> **Current Status:** 🟢 **Pass-10 Implemented.** Tavily web search infrastructure adapter (`TavilyWebSearchProvider`), config loader (`TavilyConfig`), client abstraction (`TavilySearchClient`), offline unit tests with handwritten fake client, opt-in live smoke test (`test_tavily_web_search_live.py`), and ADR-006 are complete and verified.
 
 
 ## Overview
@@ -27,9 +27,9 @@ The tutorial follows a deliberate learning sequence designed to isolate framewor
 10. **Groq Generator Adapter** — Concrete hosted LLM implementation of the `Generator` domain port (`GroqGenerator`, `GroqConfig`, `GroqChatClient`, `GroqSdkChatClient`). (Implemented)
 11. **Groq Relevance Grader** — Concrete implementation of `RelevanceGrader` (`GroqRelevanceGrader`). (Implemented)
 12. **Groq Query Rewriter** — Concrete implementation of `QueryRewriter` (`GroqQueryRewriter`). (Implemented)
+13. **Tavily Web Search Adapter** — Concrete implementation of `WebSearchProvider` (`TavilyWebSearchProvider`). (Implemented)
 
-13. **Groq Hallucination Checker** — Concrete implementation of `HallucinationChecker`.
-14. **Tavily Web Search Adapter** — Concrete implementation of `WebSearchProvider`.
+14. **Groq Hallucination Checker** — Concrete implementation of `HallucinationChecker`.
 15. **Decision Trace Persistence** — SQLite storage implementation of `DecisionTraceRepository`.
 16. **Composition Root** — Assembling graph orchestration with concrete adapters.
 17. **FastAPI / Interface** — Exposing HTTP/SSE endpoints for query processing and decision trace inspection.
@@ -331,6 +331,132 @@ class GroqQueryRewriter:
 1. **Retrieval Strategy vs. User Intent**: Query rewriting is a probabilistic optimization designed to increase external search engine recall. The rewritten string is optimized for search indexing, not for answering the user's intent.
 2. **Risk of Query Drift**: An LLM rewriter can drop essential context, alter technical terms, or drift from the original request.
 3. **Grounded Answer Generation**: The final `Generator` must produce an answer to what the user *actually asked*. Answering the rewritten search query risks giving a technically accurate answer to a different question.
+
+---
+
+## Pass-10 Learning Outline — Tavily Web Search Infrastructure Adapter
+
+Pass-10 demonstrates how external corrective web search is implemented behind the Domain `WebSearchProvider` port using Tavily Search API.
+
+```text
+rewritten search query
+          ↓
+TavilyWebSearchProvider (TavilyConfig)
+          ↓
+TavilySearchClient (Infrastructure Protocol)
+          ↓
+TavilySdkSearchClient (Tavily SDK)
+          ↓
+Provider JSON Response Payload
+          ↓
+Normalizer (Field Extraction & Defensive Validation)
+          ↓
+Domain Document[] (content, source, title, source_url, metadata)
+```
+
+### Domain Port Contract
+
+```python
+class WebSearchProvider(Protocol):
+    """Port for searching external web sources."""
+
+    def search(self, question: Question) -> Sequence[Document]:
+        """Search external web sources for evidence relevant to the question."""
+        ...
+```
+
+### Infrastructure Adapter & Config Implementation
+
+Excerpts from `TavilyConfig` and `TavilyWebSearchProvider` showing configuration validation and provider response normalization:
+
+```python
+@dataclass(frozen=True)
+class TavilyConfig:
+    api_key: str
+    max_results: int = DEFAULT_TAVILY_MAX_RESULTS
+    search_depth: str = DEFAULT_TAVILY_SEARCH_DEPTH
+
+    def __post_init__(self) -> None:
+        if not self.api_key or not self.api_key.strip():
+            raise ValueError("TAVILY_API_KEY is required.")
+        if self.max_results <= 0:
+            raise ValueError("max_results must be greater than 0.")
+
+
+class TavilyWebSearchProvider:
+    def __init__(self, config: TavilyConfig, client: TavilySearchClient) -> None:
+        self._config = config
+        self._client = client
+
+    def search(self, question: Question) -> Sequence[Document]:
+        try:
+            raw_response = self._client.search(
+                query=question.text,
+                max_results=self._config.max_results,
+            )
+        except Exception as exc:
+            raise RuntimeError("Tavily search request failed.") from exc
+
+        if not raw_response or not isinstance(raw_response, dict):
+            return []
+
+        raw_results = raw_response.get("results")
+        if not raw_results or not isinstance(raw_results, list):
+            return []
+
+        documents: list[Document] = []
+        for item in raw_results:
+            if not isinstance(item, dict):
+                continue
+
+            raw_content = item.get("content")
+            if not raw_content or not isinstance(raw_content, str) or not raw_content.strip():
+                continue
+
+            raw_url = item.get("url")
+            if not raw_url or not isinstance(raw_url, str) or not raw_url.strip():
+                continue
+
+            metadata: dict[str, object] = {}
+            raw_score = item.get("score")
+            if isinstance(raw_score, (int, float)):
+                metadata["tavily_score"] = float(raw_score)
+
+            doc = Document(
+                content=raw_content.strip(),
+                source=raw_url.strip(),
+                title=item.get("title").strip() if isinstance(item.get("title"), str) and item.get("title").strip() else None,
+                source_url=raw_url.strip(),
+                metadata=metadata,
+            )
+            documents.append(doc)
+
+        return documents
+```
+
+### Key Architectural Rules & Takeaways
+
+1. **Provider Isolation**:
+   - `question.text` is forwarded directly as the query string without modifying the original question object.
+   - Tavily-specific response dictionaries and scores (`score`) are mapped to provider-neutral `Document` entities inside the Infrastructure layer.
+2. **Search Engine Ranking Score $\neq$ Downstream Relevance Grade**:
+   - Tavily search ranking scores (`score`) reflect keyword match quality according to Tavily index heuristics.
+   - Downstream `RelevanceGrader` and `Generator` nodes remain authoritative for evaluating semantic relevance and evidence grounding. Tavily scores are preserved strictly in `Document.metadata["tavily_score"]`.
+3. **Failure Differentiation**:
+   - Empty search results (`{"results": []}`) return an empty list `[]` cleanly.
+   - Operational API failures raise `RuntimeError("Tavily search request failed.")` chained with `from exc`.
+
+---
+
+## Interview Guide — How Does Web Search Handling Differ from Local Vector Storage?
+
+> **Interview Question:** What are the key architectural differences between local vector retrieval and external web search in a CRAG pipeline?
+
+### Answer Strategy
+
+1. **Trust & Data Hygiene**: Local vector storage operates over curated, internal enterprise documentation. External web search retrieves untrusted external web content requiring strict isolation to prevent indirect prompt injection and data leakage.
+2. **Privacy Policy Checks**: Before invoking external search APIs, production systems require PII detection and allowlist filtering to prevent accidental leakage of sensitive internal terms or infrastructure names.
+3. **Score Semantics**: Vector similarity distance measures embedding-space proximity, whereas web search engine scores measure provider-specific keyword indexing relevance. Neither score replaces explicit LLM relevance grading and hallucination verification.
 
 ---
 
