@@ -6,3 +6,4 @@ This directory captures architectural decisions for Use Case 01 (Corrective RAG 
 
 * [ADR-001: Clean Architecture and LangGraph Boundary](ADR-001-clean-architecture-and-langgraph-boundary.md) — *Accepted*
 * [ADR-002: Local Vector Retrieval with Chroma](ADR-002-local-vector-retrieval-with-chroma.md) — *Accepted*
+* [ADR-003: Groq as the Initial Hosted Generation Provider](ADR-003-groq-hosted-generation-adapter.md) — *Accepted*

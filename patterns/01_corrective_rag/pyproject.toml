@@ -11,6 +11,7 @@ requires-python = ">=3.11"
 dependencies = [
     "langgraph",
     "chromadb",
+    "groq",
 ]
 
 [tool.setuptools.packages.find]
@@ -19,4 +20,9 @@ where = ["src"]
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "live: opt-in live integration smoke tests calling external APIs",
 ]

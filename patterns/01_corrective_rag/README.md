@@ -1,7 +1,6 @@
 # Use Case 01 — Corrective RAG for Kubernetes Troubleshooting
 
-> **Current Status:** 🟢 **Pass-6 — Local Chroma Retrieval Infrastructure Implemented.** Local document loading (`DocumentLoader`), chunking (`DocumentChunker`), local embeddings, Chroma indexing (`ChromaIndexer`), and `ChromaRetriever` adapter implementing the `Retriever` domain port are fully implemented and verified with offline integration tests. Knowledge base fixture (`data/kb_snapshot/`), build script (`scripts/build_kb_index.py`), and ADR-002 are complete. Real LLM generation, Tavily web search, relevance grading, query rewriting, API, and UI remain stubbed or unimplemented.
-
+> **Current Status:** 🟢 **Pass-7 — Groq Generator Infrastructure Adapter Implemented.** Groq hosted LLM adapter (`GroqGenerator`), configuration model/loader (`GroqConfig`, `load_groq_config_from_env`), internal client protocol/wrapper (`GroqChatClient`, `GroqSdkChatClient`), prompt message construction (`build_generation_messages`), offline unit tests, opt-in live smoke test (`test_groq_generator_live.py`), and ADR-003 are fully implemented and verified. Relevance grading, query rewriting, hallucination checking, Tavily web search, API, and UI remain stubbed or unimplemented.
 
 
 ---
@@ -56,7 +55,7 @@ Application (AnswerQuestionUseCase & LangGraph Orchestration)
   ↓
 Domain (Pure Python Entities & Ports)
   ↑
-Infrastructure (Chroma, OpenAI, Tavily, Persistence Adapters)
+Infrastructure (Chroma, Groq, Tavily, Persistence Adapters)
 ```
 
 * **Domain**: Pure Python entities (`Question`, `Document`, `GradedDocument`, `Answer`, `DecisionTrace`) and ports (`Retriever`, `RelevanceGrader`, `QueryRewriter`, `Generator`, `WebSearchProvider`, `HallucinationChecker`, `DecisionTraceRepository`). Zero third-party SDK dependencies.
@@ -69,7 +68,7 @@ Infrastructure (Chroma, OpenAI, Tavily, Persistence Adapters)
 
 * **Orchestration:** LangGraph / LangChain
 * **Vector Store:** Chroma
-* **LLM Provider:** OpenAI / Ollama
+* **LLM Provider:** Groq
 * **Web Search:** Tavily
 * **API:** FastAPI
 * **UI:** React
@@ -81,5 +80,7 @@ Infrastructure (Chroma, OpenAI, Tavily, Persistence Adapters)
 * [Architecture Documentation](docs/architecture/README.md)
 * [Architectural Decision Records (ADRs)](docs/adrs/README.md)
   * [ADR-001: Clean Architecture and LangGraph Boundary](docs/adrs/ADR-001-clean-architecture-and-langgraph-boundary.md)
-* [Step-by-Step Tutorial (Placeholder)](docs/tutorial/README.md)
+  * [ADR-002: Local Vector Retrieval with Chroma](docs/adrs/ADR-002-local-vector-retrieval-with-chroma.md)
+  * [ADR-003: Groq as the Initial Hosted Generation Provider](docs/adrs/ADR-003-groq-hosted-generation-adapter.md)
+* [Step-by-Step Tutorial](docs/tutorial/README.md)
 * [Interview Guide (Placeholder)](docs/interview-guide/README.md)

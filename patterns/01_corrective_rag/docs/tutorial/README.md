@@ -1,6 +1,6 @@
 # Use Case 01 — Step-by-Step Tutorial
 
-> **Current Status:** 🟢 **Pass-6 Implemented.** Local KB document loading (`DocumentLoader`), paragraph/character-aware chunking (`DocumentChunker`), local embeddings (`DeterministicTestEmbeddingFunction`, `DefaultLocalEmbeddingFunction`), Chroma vector store indexing (`ChromaIndexer`), and concrete `ChromaRetriever` adapter implementing the `Retriever` domain port are fully implemented and verified with offline integration tests. Knowledge-base fixture (`data/kb_snapshot/`), build script (`scripts/build_kb_index.py`), and ADR-002 are complete.
+> **Current Status:** 🟢 **Pass-7 Implemented.** Groq hosted LLM generation infrastructure adapter (`GroqGenerator`), configuration model/loader (`GroqConfig`, `load_groq_config_from_env`), internal client protocol and wrapper (`GroqChatClient`, `GroqSdkChatClient`), prompt message construction (`build_generation_messages`), offline unit tests with handwritten fake client, opt-in live smoke test (`test_groq_generator_live.py`), and ADR-003 are complete and verified.
 
 
 ## Overview
@@ -24,14 +24,18 @@ The tutorial follows a deliberate learning sequence designed to isolate framewor
 7. **Query Rewriting & Web Search Routing** — Adding stale-KB detection and web fallback routing branches. (Implemented)
 8. **Bounded Grounding Retry & Safe Refusal** — Adding bounded generation retries and safe refusal routing for ungrounded answers. (Implemented)
 9. **Chroma Retrieval Adapter** — Concrete vector store implementation of the `Retriever` port (`ChromaRetriever`, `ChromaIndexer`, `DocumentChunker`, `DocumentLoader`). (Implemented)
-10. **OpenAI / Ollama AI Adapters** — Concrete LLM implementations of `Generator`, `RelevanceGrader`, and `HallucinationChecker`.
-11. **Tavily Web Search Adapter** — Concrete implementation of `WebSearchProvider`.
-12. **Decision Trace Persistence** — SQLite storage implementation of `DecisionTraceRepository`.
-13. **Composition Root** — Assembling graph orchestration with concrete adapters.
-14. **FastAPI / Interface** — Exposing HTTP/SSE endpoints for query processing and decision trace inspection.
-15. **Integration & Golden Acceptance Tests** — Running golden queries against full adapter stack.
-16. **Decision Trace Inspection** — Auditing system decisions across local vs. web fallback routes.
-17. **Production Evolution & Interview Lessons** — System design trade-offs and scaling strategies.
+10. **Groq Generator Adapter** — Concrete hosted LLM implementation of the `Generator` domain port (`GroqGenerator`, `GroqConfig`, `GroqChatClient`, `GroqSdkChatClient`). (Implemented)
+11. **Groq Relevance Grader** — Concrete implementation of `RelevanceGrader`.
+12. **Groq Query Rewriter** — Concrete implementation of `QueryRewriter`.
+13. **Groq Hallucination Checker** — Concrete implementation of `HallucinationChecker`.
+14. **Tavily Web Search Adapter** — Concrete implementation of `WebSearchProvider`.
+15. **Decision Trace Persistence** — SQLite storage implementation of `DecisionTraceRepository`.
+16. **Composition Root** — Assembling graph orchestration with concrete adapters.
+17. **FastAPI / Interface** — Exposing HTTP/SSE endpoints for query processing and decision trace inspection.
+18. **Integration & Golden Acceptance Tests** — Running golden queries against full adapter stack.
+19. **Decision Trace Inspection** — Auditing system decisions across local vs. web fallback routes.
+20. **Production Evolution & Interview Lessons** — System design trade-offs and scaling strategies.
+
 
 ---
 
