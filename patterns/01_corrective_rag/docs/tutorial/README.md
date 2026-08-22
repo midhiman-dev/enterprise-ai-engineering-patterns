@@ -1,6 +1,6 @@
 # Use Case 01 — Step-by-Step Tutorial
 
-> **Current Status:** 🟢 **Pass-10 Implemented.** Tavily web search infrastructure adapter (`TavilyWebSearchProvider`), config loader (`TavilyConfig`), client abstraction (`TavilySearchClient`), offline unit tests with handwritten fake client, opt-in live smoke test (`test_tavily_web_search_live.py`), and ADR-006 are complete and verified.
+> **Current Status:** 🟢 **Pass-11 Implemented.** Groq grounding verification adapter (`GroqHallucinationChecker`), message builder (`build_grounding_check_messages`), validated JSON parser (`parse_grounding_result`), internal result model (`GroqGroundingResult`), offline unit tests, opt-in live smoke test (`test_groq_hallucination_checker_live.py`), and ADR-007 are complete and verified. Implemented real adapters now include Chroma Retriever, Groq Generator, Groq RelevanceGrader, Groq QueryRewriter, Tavily WebSearchProvider, and Groq HallucinationChecker.
 
 
 ## Overview
@@ -29,7 +29,8 @@ The tutorial follows a deliberate learning sequence designed to isolate framewor
 12. **Groq Query Rewriter** — Concrete implementation of `QueryRewriter` (`GroqQueryRewriter`). (Implemented)
 13. **Tavily Web Search Adapter** — Concrete implementation of `WebSearchProvider` (`TavilyWebSearchProvider`). (Implemented)
 
-14. **Groq Hallucination Checker** — Concrete implementation of `HallucinationChecker`.
+14. **Groq Hallucination Checker** — Concrete implementation of `HallucinationChecker` (`GroqHallucinationChecker`). (Implemented)
+
 15. **Decision Trace Persistence** — SQLite storage implementation of `DecisionTraceRepository`.
 16. **Composition Root** — Assembling graph orchestration with concrete adapters.
 17. **FastAPI / Interface** — Exposing HTTP/SSE endpoints for query processing and decision trace inspection.
@@ -459,7 +460,145 @@ class TavilyWebSearchProvider:
 
 ---
 
+## Pass-11 Learning Outline — Groq HallucinationChecker / Grounding Support Verifier
+
+Pass-11 demonstrates how evidence-grounding / support verification is implemented behind the Domain `HallucinationChecker` port using Groq prompt-constrained JSON and strict application-side validation.
+
+```text
+Question + Candidate Answer
+          +
+Supplied Evidence Documents
+          ↓
+GroqHallucinationChecker
+          ↓
+  build_grounding_check_messages()
+          ↓
+GroqChatClient.complete()
+          ↓
+  parse_grounding_result()
+          ↓
+is_supported (True / False)
+          ↓
+Application LangGraph Routing
+```
+
+### Domain Port Contract
+
+```python
+class HallucinationChecker(Protocol):
+    """Port for verifying candidate answer grounding against evidence documents."""
+
+    def is_supported(
+        self,
+        answer: Answer,
+        documents: Sequence[Document],
+    ) -> bool:
+        """Determine whether an answer is supported by the evidence documents."""
+        ...
+```
+
+### Infrastructure Adapter & Parser Implementation
+
+Excerpts from `GroqHallucinationChecker` showing grounding message construction, prompt-constrained JSON parsing, and evidence validation:
+
+```python
+@dataclass(frozen=True)
+class GroqGroundingResult:
+    is_supported: bool
+    reason: str
+
+
+def parse_grounding_result(raw_response: str) -> GroqGroundingResult:
+    if not raw_response or not raw_response.strip():
+        raise RuntimeError("Groq grounding check returned invalid JSON output.")
+
+    text = raw_response.strip()
+    if text.startswith("```"):
+        lines = text.splitlines()
+        if len(lines) >= 2 and lines[-1].startswith("```"):
+            text = "\n".join(lines[1:-1]).strip()
+
+    try:
+        data = json.loads(text)
+    except Exception as exc:
+        raise RuntimeError("Groq grounding check returned invalid JSON output.") from exc
+
+    if not isinstance(data, dict):
+        raise RuntimeError("Groq grounding check returned invalid JSON output.")
+
+    allowed_keys = {"is_supported", "reason"}
+    if set(data.keys()) != allowed_keys:
+        raise RuntimeError("Groq grounding check returned invalid JSON output.")
+
+    is_supported_val = data.get("is_supported")
+    reason_val = data.get("reason")
+
+    if type(is_supported_val) is not bool:
+        raise RuntimeError("Groq grounding check returned invalid JSON output.")
+
+    if not isinstance(reason_val, str) or not reason_val.strip():
+        raise RuntimeError("Groq grounding check returned invalid JSON output.")
+
+    return GroqGroundingResult(
+        is_supported=is_supported_val,
+        reason=reason_val.strip(),
+    )
+
+
+class GroqHallucinationChecker:
+    def __init__(self, config: GroqConfig, client: GroqChatClient) -> None:
+        self._config = config
+        self._client = client
+
+    def is_supported(
+        self,
+        answer: Answer,
+        documents: Sequence[Document],
+    ) -> bool:
+        if not documents:
+            raise ValueError(
+                "GroqHallucinationChecker requires at least one evidence document."
+            )
+
+        messages = build_grounding_check_messages(answer, documents)
+        raw_response = self._client.complete(
+            model=self._config.model,
+            messages=messages,
+            temperature=self._config.temperature,
+        )
+        result = parse_grounding_result(raw_response)
+        return result.is_supported
+```
+
+### Key Architectural Rules & Takeaways
+
+1. **Grounding Support Verification $\neq$ Universal Fact Checking**:
+   - The checker evaluates *strictly whether the candidate answer is supported by the supplied evidence documents*.
+   - If the evidence documents themselves contain stale or incomplete information, a faithful answer is still marked as `is_supported=True`. It does NOT guarantee universal real-world truth.
+2. **Evidence-as-Data Defense**:
+   - System prompt explicitly instructs the verifier that evidence content is reference data material.
+   - Text inside evidence documents must never override evaluation rules, persona, or JSON format requirements.
+3. **Strict Validation & Failure Differentiation**:
+   - Calling `is_supported` with empty documents (`documents=[]`) raises `ValueError` immediately.
+   - Invalid JSON structure or boolean coercion attempts (e.g. `"true"`) raise operational `RuntimeError`.
+   - Provider API failures propagate as `RuntimeError` and are NEVER silently converted into `is_supported=False`.
+
+---
+
+## Interview Guide — Is a Hallucination Checker a Fact Checker?
+
+> **Interview Question:** Is the GroqHallucinationChecker in your pipeline responsible for proving whether an answer is factually true in the real world?
+
+### Answer Strategy
+
+1. **Evidence Entailment vs. Fact Verification**: No. The hallucination checker is an evidence-grounding verifier. It evaluates whether the candidate answer is entailed by the specific evidence documents supplied to it during the workflow.
+2. **Untrusted Evidence Input**: If retrieved local documents or Tavily web results contain stale, inaccurate, or malicious text, a grounding checker will evaluate support against that input without verifying external truth.
+3. **Graph Routing Role**: The verifier returns a boolean (`True`/`False`) signal that LangGraph uses for conditional routing (e.g. accepting the answer vs. initiating a generation retry or safe refusal).
+
+---
+
 ## Apply the Pattern Yourself
+
 
 After completing the reference tutorial, use the [Pattern 01 Learner Assignment](../assignment/ASSIGNMENT.md) to apply **Corrective RAG** independently to a different enterprise technical-support problem.
 

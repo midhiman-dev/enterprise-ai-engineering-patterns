@@ -1,6 +1,6 @@
 # Use Case 01 — Corrective RAG for Kubernetes Troubleshooting
 
-> **Current Status:** 🟢 **Pass-10 — Tavily WebSearchProvider Infrastructure Adapter Implemented.** Tavily web search adapter (`TavilyWebSearchProvider`), config loader (`TavilyConfig`), client abstraction (`TavilySearchClient`), offline unit tests, opt-in live smoke test (`test_tavily_web_search_live.py`), and ADR-006 are fully implemented and verified. Implemented real adapters now include Chroma Retriever, Groq Generator, Groq RelevanceGrader, Groq QueryRewriter, and Tavily WebSearchProvider. Hallucination checking, full graph composition root, API, and UI remain to be wired in subsequent passes.
+> **Current Status:** 🟢 **Pass-11 — Groq HallucinationChecker / Grounding Support Verifier Infrastructure Adapter Implemented.** Groq grounding verification adapter (`GroqHallucinationChecker`), message builder (`build_grounding_check_messages`), validated JSON parser (`parse_grounding_result`), internal result model (`GroqGroundingResult`), offline unit tests, opt-in live smoke test (`test_groq_hallucination_checker_live.py`), and ADR-007 are fully implemented and verified. Implemented real adapters now include Chroma Retriever, Groq Generator, Groq RelevanceGrader, Groq QueryRewriter, Tavily WebSearchProvider, and Groq HallucinationChecker. Full graph composition root, API, and UI remain to be wired in subsequent passes.
 
 
 ---
@@ -85,6 +85,8 @@ Infrastructure (Chroma, Groq, Tavily, Persistence Adapters)
   * [ADR-004: LLM Relevance Grading with Validated JSON Output](docs/adrs/ADR-004-llm-relevance-grading-with-structured-output.md)
   * [ADR-005: LLM Query Rewriting for Corrective Retrieval](docs/adrs/ADR-005-llm-query-rewriting-for-corrective-retrieval.md)
   * [ADR-006: Tavily Web Search for Corrective Retrieval](docs/adrs/ADR-006-tavily-web-search-for-corrective-retrieval.md)
+  * [ADR-007: Evidence Grounding Verification for Generated Answers](docs/adrs/ADR-007-evidence-grounding-verification.md)
+
 * [Step-by-Step Tutorial](docs/tutorial/README.md)
 * [Learner Assignment — Apply Corrective RAG to a Different Enterprise Support Problem](docs/assignment/ASSIGNMENT.md)
 * [Interview Guide (Placeholder)](docs/interview-guide/README.md)
