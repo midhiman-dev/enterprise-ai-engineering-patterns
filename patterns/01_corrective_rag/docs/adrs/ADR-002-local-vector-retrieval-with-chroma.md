@@ -56,13 +56,15 @@ We decide to:
 ### Trade-offs
 * Local filesystem storage differs from distributed enterprise production vector databases.
 * Single-node Chroma persistence is not intended for multi-tenant high-throughput scaling.
+* Embedding model changes require re-embedding/re-indexing the affected collection; index-time and query-time vectors must come from compatible embedding spaces.
 
 ## Interview Takeaway
 
 > **Why Clean Architecture Isolates Vector Databases**:
-> Application orchestration depends strictly on the Domain `Retriever` port contract (`retrieve(Question) -> Sequence[Document]`).
-> Whether candidate documents originate from local Chroma, PostgreSQL with `pgvector`, Pinecone, or Azure AI Search, the core state graph and routing logic remain unchanged.
-> While swapping database vendors in production involves operational data migration and re-indexing, Application-layer code requires zero modifications.
+> Application orchestration does not need to change when a replacement retrieval adapter preserves the semantics of the existing `Retriever` port (`retrieve(Question) -> Sequence[Document]`).
+> Whether candidate documents originate from local Chroma, PostgreSQL with `pgvector`, Pinecone, or Azure AI Search, the core state graph and routing logic remain unchanged provided the port contract is preserved.
+> However, if a replacement retrieval solution introduces materially different semantics—such as mandatory security context, hybrid retrieval policy, multi-query behavior, or different result contracts—the Domain/Application contract may legitimately need to evolve.
+
 
 ## Diagnostic Sequence: Retrieval Failure vs. Generation Failure
 

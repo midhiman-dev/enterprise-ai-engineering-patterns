@@ -92,3 +92,19 @@ How would this ingestion and retrieval architecture evolve from a small local te
 3. **Distributed Vector Database**: Migrate from single-node local disk Chroma to distributed cluster deployments (e.g., Milvus, Qdrant, Pinecone, or PostgreSQL with `pgvector`).
 4. **Hybrid Lexical + Dense Retrieval**: Combine dense semantic embeddings with sparse BM25 indexing (e.g. Elasticsearch / Meilisearch) to capture both semantic intent and exact technical error codes.
 5. **Two-Stage Retrieval & Reranking**: Retrieve top 50–100 candidates via fast vector/hybrid search, then pass candidate pairs to a Cohere / BGE cross-encoder reranker to pick the top 4–6 highest-quality documents for LLM context generation.
+
+---
+
+## Interview Guide — What Happens If the Embedding Model Changes?
+
+> **Interview Question:** How do you handle changing or upgrading an embedding model in a production RAG system?
+
+Changing an embedding model in production requires a controlled migration strategy because vector representations across different embedding models inhabit incompatible mathematical vector spaces:
+
+1. **Embedding Space Compatibility**: Index-time embeddings and query-time embeddings must always use the exact same embedding model and configuration. Vector distances between different embedding spaces are meaningless.
+2. **Re-Embedding Corpus**: Upgrading or switching an embedding model requires re-embedding and re-indexing the entire document corpus into a new versioned vector collection (e.g. `corrective-rag-kb-v2`).
+3. **Versioned Indexing**: Build the replacement vector collection in parallel while the existing production index continues serving user queries.
+4. **Retrieval Evaluation**: Run evaluation benchmarks (MRR, Hit@K) against a golden evaluation dataset using the new index before cutting over production traffic.
+5. **Zero-Downtime Cutover & Rollback**: Update the retrieval adapter configuration to point to the new collection while retaining the old index for immediate rollback capabilities.
+
+> *Design guidance — not implemented in Pass-6A*

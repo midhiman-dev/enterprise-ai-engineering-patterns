@@ -71,26 +71,38 @@ class DeterministicTestEmbeddingFunction(EmbeddingFunction[Documents]):
 
 
 class DefaultLocalEmbeddingFunction(EmbeddingFunction[Documents]):
-    """Local embedding function wrapper for local knowledge-base indexing script.
+    """Local semantic embedding function wrapper for local knowledge-base indexing script.
 
-    Uses Chroma's default ONNX-based MiniLM embedding model when available, falling back to
-    deterministic token-hashing embedding if model weights are unavailable or offline.
+    Uses Chroma's default ONNX-based MiniLM embedding model. Fails fast with an explicit
+    RuntimeError if the semantic embedding model fails to initialize or execute.
+
+    Note on Embedding-Space Consistency:
+        The same embedding model and configuration must be used for both indexing and querying
+        a collection. Changing embedding models requires controlled re-embedding and re-indexing
+        rather than silently mixing incompatible vector spaces.
     """
 
     def __init__(self) -> None:
         try:
             self._chroma_ef = embedding_functions.DefaultEmbeddingFunction()
-            self._fallback_ef = None
-        except Exception:
-            self._chroma_ef = None
-            self._fallback_ef = DeterministicTestEmbeddingFunction(dimension=384)
+        except Exception as exc:
+            raise RuntimeError(
+                "Local semantic embedding model could not be loaded. "
+                "Ensure the required Chroma embedding model is available before building or querying this index."
+            ) from exc
+
+    def name(self) -> str:
+        """Return identifier for embedding function."""
+        return "default_local_semantic_embedding"
+
+    def get_config(self) -> dict[str, object]:
+        """Return configuration dictionary for Chroma serialization."""
+        return {}
 
     def __call__(self, input: Documents) -> Embeddings:
-        if self._chroma_ef is not None:
-            try:
-                return self._chroma_ef(input)
-            except Exception:
-                pass
-        if self._fallback_ef is None:
-            self._fallback_ef = DeterministicTestEmbeddingFunction(dimension=384)
-        return self._fallback_ef(input)
+        try:
+            return self._chroma_ef(input)
+        except Exception as exc:
+            raise RuntimeError(
+                "Local semantic embedding model execution failed for input documents."
+            ) from exc

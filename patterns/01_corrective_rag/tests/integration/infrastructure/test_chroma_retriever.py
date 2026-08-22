@@ -110,3 +110,48 @@ def test_retriever_metadata_preservation(ephemeral_collection: chromadb.Collecti
     assert doc.title == "Meta Title"
     assert doc.metadata["chunk_index"] == 3
     assert "retrieval_distance" in doc.metadata
+
+
+def test_retriever_returns_expected_top1_candidate_with_deterministic_test_embedding(
+    ephemeral_collection: chromadb.Collection,
+) -> None:
+    indexer = ChromaIndexer(collection=ephemeral_collection)
+    chunks = [
+        DocumentChunk(
+            chunk_id="crashloop.md::chunk_0",
+            content="CrashLoopBackOff pod restart troubleshooting guide for container crashes and exit code errors.",
+            source="crashloop.md",
+            chunk_index=0,
+            metadata={"source": "crashloop.md", "document_title": "CrashLoopBackOff Guide"},
+        ),
+        DocumentChunk(
+            chunk_id="backup.md::chunk_0",
+            content="Database backup and restore instructions for PostgreSQL database snapshots and recovery.",
+            source="backup.md",
+            chunk_index=0,
+            metadata={"source": "backup.md", "document_title": "DB Backup Guide"},
+        ),
+        DocumentChunk(
+            chunk_id="dns.md::chunk_0",
+            content="CoreDNS service resolution troubleshooting guide for cluster IP network routing.",
+            source="dns.md",
+            chunk_index=0,
+            metadata={"source": "dns.md", "document_title": "CoreDNS Guide"},
+        ),
+        DocumentChunk(
+            chunk_id="imagepull.md::chunk_0",
+            content="Container image registry authentication failed ImagePullBackOff secret credentials.",
+            source="imagepull.md",
+            chunk_index=0,
+            metadata={"source": "imagepull.md", "document_title": "ImagePull Guide"},
+        ),
+    ]
+    indexer.index_chunks(chunks)
+
+    retriever = ChromaRetriever(collection=ephemeral_collection, top_k=1)
+    question = Question(text="CrashLoopBackOff pod restart troubleshooting")
+    results = retriever.retrieve(question)
+
+    assert len(results) == 1
+    assert results[0].source == "crashloop.md"
+    assert "CrashLoopBackOff" in results[0].content
