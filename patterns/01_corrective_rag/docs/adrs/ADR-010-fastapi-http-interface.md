@@ -50,7 +50,7 @@ HTTP Response DTO (QuestionResponse)
 ## Why FastAPI?
 
 FastAPI was selected for this transport layer because:
-* **Python AI Ecosystem Alignment**: FastAPI is the de facto standard for Python AI/ML microservice APIs.
+* **Python AI Ecosystem Alignment**: FastAPI is widely used in Python AI/ML service development.
 * **Pydantic Validation**: Automatic request DTO parsing, type enforcement, and explicit error responses (HTTP 422).
 * **OpenAPI Documentation**: Automatic OpenAPI/Swagger documentation generation from Pydantic DTO models and route annotations.
 * **Minimal Transport Overhead**: Lightweight ASGI framework with zero forced ORM or framework magic.
@@ -105,6 +105,14 @@ A critical enterprise distinction:
 
 ### 5. Synchronous Route Decision
 The underlying LangGraph state graph and capability adapters execute synchronously. Converting API routes to `async def` without async provider SDKs would provide false concurrency guarantees. Synchronous routes match the current application contract.
+
+### 6. Valid Application Outcome vs. Broken Application Contract
+A critical design principle enforces strict validation of the terminal application contract:
+* **Valid Application Outcome**: When `application.run(question)` completes with a valid `Answer` entity (including `AnswerStatus.UNSUPPORTED`), exact boolean `is_supported`, non-negative integer `generation_attempts`, and a `DecisionTrace` entity, the API maps the outcome to **HTTP 200 OK**.
+* **Broken Application Contract / Malformed State**: If terminal state is missing required keys (`answer`, `is_supported`, `generation_attempts`, `trace`), contains `None` for non-nullable fields, or passes invalid field types (e.g. string for `is_supported`), the route boundary treats this as an internal contract violation and returns **HTTP 500 Internal Server Error**.
+
+> **Interview Takeaway:**
+> "The HTTP transport layer translates valid application outcomes, but it must not manufacture fallback answers or coerce types to compensate for malformed runtime state. A valid safe refusal is an explicit application entity (`AnswerStatus.UNSUPPORTED`), whereas an incomplete terminal state is an operational failure."
 
 ---
 

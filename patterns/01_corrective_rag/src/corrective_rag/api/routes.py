@@ -9,7 +9,9 @@ from corrective_rag.api.models import (
     QuestionResponse,
 )
 from corrective_rag.application.application import CorrectiveRAGApplication
-from corrective_rag.domain.entities.answer import AnswerStatus
+from corrective_rag.application.graph_state import GraphState
+from corrective_rag.domain.entities.answer import Answer, AnswerStatus
+from corrective_rag.domain.entities.decision_trace import DecisionTrace
 from corrective_rag.domain.entities.question import Question
 
 
@@ -27,6 +29,69 @@ def get_application(request: Request) -> CorrectiveRAGApplication:
 
 
 router = APIRouter()
+
+
+def _map_final_state_to_response(final_state: GraphState) -> QuestionResponse:
+    """Validates terminal application state and maps it to a QuestionResponse DTO.
+
+    Strictly validates that final_state satisfies the expected Application contract.
+    Does NOT manufacture fallback answers or coerce types for malformed state.
+
+    Args:
+        final_state: Completed application GraphState dictionary.
+
+    Returns:
+        QuestionResponse DTO.
+
+    Raises:
+        TypeError, KeyError, ValueError: If final_state is missing required keys or contains malformed types.
+    """
+    if not isinstance(final_state, dict):
+        raise TypeError("Workflow final state must be a dictionary.")
+
+    if "answer" not in final_state:
+        raise KeyError("Workflow final state is missing required 'answer' key.")
+    answer = final_state["answer"]
+    if not isinstance(answer, Answer):
+        raise TypeError("Workflow final state 'answer' must be an Answer instance.")
+
+    if answer.status == AnswerStatus.ANSWERED:
+        answer_status_str = "answered"
+    elif answer.status == AnswerStatus.UNSUPPORTED:
+        answer_status_str = "unsupported"
+    else:
+        raise ValueError(f"Unknown AnswerStatus: {answer.status}")
+
+    if "is_supported" not in final_state:
+        raise KeyError("Workflow final state is missing required 'is_supported' key.")
+    is_supported_val = final_state["is_supported"]
+    if type(is_supported_val) is not bool:
+        raise TypeError("Workflow final state 'is_supported' must be a boolean.")
+
+    if "generation_attempts" not in final_state:
+        raise KeyError("Workflow final state is missing required 'generation_attempts' key.")
+    attempts_val = final_state["generation_attempts"]
+    if type(attempts_val) is not int or attempts_val < 0:
+        raise TypeError("Workflow final state 'generation_attempts' must be a non-negative integer.")
+
+    if "trace" not in final_state:
+        raise KeyError("Workflow final state is missing required 'trace' key.")
+    trace_obj = final_state["trace"]
+    if not isinstance(trace_obj, DecisionTrace):
+        raise TypeError("Workflow final state 'trace' must be a DecisionTrace instance.")
+
+    decision_trace_dtos = [
+        DecisionTraceStepResponse(step=step.name, detail=step.detail)
+        for step in trace_obj.steps
+    ]
+
+    return QuestionResponse(
+        answer=answer.text,
+        status=answer_status_str,
+        is_supported=is_supported_val,
+        generation_attempts=attempts_val,
+        decision_trace=decision_trace_dtos,
+    )
 
 
 @router.get("/health", response_model=HealthResponse, status_code=status.HTTP_200_OK)
@@ -58,43 +123,15 @@ def ask_question(
         attempts count, and inline decision trace.
 
     Raises:
-        HTTPException: HTTP 500 if an unhandled operational exception occurs during processing.
+        HTTPException: HTTP 500 if an unhandled operational exception or contract violation occurs.
     """
     domain_question = Question(text=request_dto.question)
 
     try:
         final_state = application.run(domain_question)
+        return _map_final_state_to_response(final_state)
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An internal error occurred while processing the question.",
         ) from exc
-
-    final_answer = final_state.get("answer")
-    if final_answer is not None:
-        answer_text = final_answer.text
-        answer_status_str = final_answer.status.value
-    else:
-        answer_text = "No answer generated."
-        answer_status_str = AnswerStatus.UNSUPPORTED.value
-
-    raw_supported = final_state.get("is_supported")
-    is_supported_bool = bool(raw_supported) if raw_supported is not None else False
-    generation_attempts = final_state.get("generation_attempts", 0)
-
-    trace_obj = final_state.get("trace")
-    if trace_obj is not None:
-        decision_trace_dtos = [
-            DecisionTraceStepResponse(step=step.name, detail=step.detail)
-            for step in trace_obj.steps
-        ]
-    else:
-        decision_trace_dtos = []
-
-    return QuestionResponse(
-        answer=answer_text,
-        status=answer_status_str,
-        is_supported=is_supported_bool,
-        generation_attempts=generation_attempts,
-        decision_trace=decision_trace_dtos,
-    )

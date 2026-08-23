@@ -872,6 +872,32 @@ def create_api(
     return app
 ```
 
+#### 4. Don't Repair Broken Application State in the API
+
+A common anti-pattern in web API handlers is manufacturing artificial fallback domain outcomes when an application runtime returns malformed or incomplete state:
+
+```python
+# Conceptual Anti-Pattern: Repairing broken state in API routes
+answer = state.get("answer")
+if answer is None:
+    # WRONG: Hides application bugs by manufacturing an artificial refusal
+    return QuestionResponse(answer="No answer generated.", status="unsupported", ...)
+```
+
+Why this is dangerous:
+* It conflates an explicit, valid safe refusal (`AnswerStatus.UNSUPPORTED` produced by the workflow) with an internal application defect or missing state key.
+* It hides invariant violations in the Application layer, making system bugs difficult to detect.
+
+The correct approach is strict terminal state validation at the transport boundary:
+
+```text
+validate terminal state
+    ↓
+map valid state → HTTP 200 OK
+    ↓
+malformed / missing state → HTTP 500 Internal Server Error
+```
+
 ---
 
 ## Interview Guide — FastAPI & API Layer Boundaries
@@ -887,6 +913,10 @@ def create_api(
 > **Interview Question:** Why is safe refusal returned as HTTP 200 instead of HTTP 400 or HTTP 500?
 
 **Answer:** Safe refusal occurs when available evidence is insufficient or ungrounded (`AnswerStatus.UNSUPPORTED`). This is a valid application business outcome—a successful evaluation that the system cannot answer safely. HTTP status codes represent transport/server protocol status (200 OK vs 500 Error), whereas `status: "unsupported"` represents domain-level evidence grading.
+
+> **Interview Question:** Should the API return a fallback answer if the Application returns no answer?
+
+**Answer:** No. If the Application contract specifies that a completed workflow must return an `Answer` entity, the absence of that entity is an application contract violation / operational defect. A valid safe refusal is produced explicitly by the Application as `Answer(status=AnswerStatus.UNSUPPORTED, ...)`. The API boundary must not manufacture artificial domain answers to compensate for malformed runtime state.
 
 > **Interview Question:** Why isn't `GET /health` a readiness check?
 

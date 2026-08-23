@@ -1,5 +1,7 @@
 """Unit tests for FastAPI HTTP transport boundary."""
 
+from typing import Any
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -8,6 +10,7 @@ from corrective_rag.application.application import CorrectiveRAGApplication
 from corrective_rag.application.workflow import build_graph
 from corrective_rag.application.workflow_dependencies import WorkflowDependencies
 from corrective_rag.domain.entities.answer import Answer, AnswerStatus
+from corrective_rag.domain.entities.decision_trace import DecisionTrace
 from corrective_rag.domain.entities.document import Document
 from corrective_rag.domain.entities.question import Question
 from tests.unit.application.fakes import (
@@ -60,6 +63,30 @@ class ErrorRaisingApplication(CorrectiveRAGApplication):
 
     def run(self, question: Question, trace: object = None) -> object:
         raise RuntimeError("GROQ_API_KEY_SECRET_12345 database connection failed")
+
+
+class MalformedStateApplication(CorrectiveRAGApplication):
+    """Test fake application subclass that returns custom (potentially malformed) state dict."""
+
+    def __init__(self, state_to_return: dict) -> None:
+        self.state_to_return = state_to_return
+
+    def run(self, question: Question, trace: object = None) -> dict:
+        return self.state_to_return
+
+
+def _valid_terminal_state() -> dict:
+    """Returns a valid terminal GraphState dictionary baseline for testing."""
+    return {
+        "question": Question(text="Valid question"),
+        "rewritten_question": None,
+        "documents": [],
+        "graded_documents": [],
+        "answer": Answer(text="Valid answer", status=AnswerStatus.ANSWERED),
+        "is_supported": True,
+        "generation_attempts": 1,
+        "trace": DecisionTrace(),
+    }
 
 
 def test_health_check_returns_200_ok() -> None:
@@ -125,6 +152,17 @@ def test_ask_question_whitespace_only_question_returns_422() -> None:
     client = TestClient(api)
 
     response = client.post("/questions", json={"question": "   \n\t  "})
+
+    assert response.status_code == 422
+
+
+def test_ask_question_non_string_question_returns_422() -> None:
+    """Verifies integer question value is rejected by Pydantic with HTTP 422 without implicit coercion."""
+    app_instance, _ = build_test_application()
+    api = create_api(application=app_instance)
+    client = TestClient(api)
+
+    response = client.post("/questions", json={"question": 123})
 
     assert response.status_code == 422
 
@@ -214,3 +252,158 @@ def test_application_reused_across_multiple_requests() -> None:
 
     assert len(fake_repo.saved_traces) == 2
     assert api.state.application is app_instance
+
+
+# -----------------------------------------------------------------------------
+# Malformed Terminal State Response Contract Hardening Tests
+# -----------------------------------------------------------------------------
+
+
+def test_ask_question_missing_answer_returns_500() -> None:
+    """Verifies missing 'answer' key in final state returns HTTP 500 without manufacturing fallback."""
+    state = _valid_terminal_state()
+    del state["answer"]
+    api = create_api(application=MalformedStateApplication(state))
+    client = TestClient(api)
+
+    response = client.post("/questions", json={"question": "Valid question"})
+
+    assert response.status_code == 500
+    data = response.json()
+    assert data["detail"] == "An internal error occurred while processing the question."
+    assert "No answer generated." not in str(data)
+
+
+def test_ask_question_answer_none_returns_500() -> None:
+    """Verifies None 'answer' in final state returns HTTP 500."""
+    state = _valid_terminal_state()
+    state["answer"] = None
+    api = create_api(application=MalformedStateApplication(state))
+    client = TestClient(api)
+
+    response = client.post("/questions", json={"question": "Valid question"})
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "An internal error occurred while processing the question."
+
+
+def test_ask_question_wrong_answer_type_returns_500() -> None:
+    """Verifies string 'answer' (wrong type) in final state returns HTTP 500."""
+    state = _valid_terminal_state()
+    state["answer"] = "some string answer"
+    api = create_api(application=MalformedStateApplication(state))
+    client = TestClient(api)
+
+    response = client.post("/questions", json={"question": "Valid question"})
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "An internal error occurred while processing the question."
+
+
+def test_ask_question_missing_is_supported_returns_500() -> None:
+    """Verifies missing 'is_supported' key in final state returns HTTP 500."""
+    state = _valid_terminal_state()
+    del state["is_supported"]
+    api = create_api(application=MalformedStateApplication(state))
+    client = TestClient(api)
+
+    response = client.post("/questions", json={"question": "Valid question"})
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "An internal error occurred while processing the question."
+
+
+def test_ask_question_is_supported_none_returns_500() -> None:
+    """Verifies None 'is_supported' in final state returns HTTP 500."""
+    state = _valid_terminal_state()
+    state["is_supported"] = None
+    api = create_api(application=MalformedStateApplication(state))
+    client = TestClient(api)
+
+    response = client.post("/questions", json={"question": "Valid question"})
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "An internal error occurred while processing the question."
+
+
+@pytest.mark.parametrize("invalid_value", ["false", 0, 1])
+def test_ask_question_wrong_is_supported_type_returns_500(invalid_value: Any) -> None:
+    """Verifies non-boolean is_supported values (str, int) return HTTP 500 without truthiness coercion."""
+    state = _valid_terminal_state()
+    state["is_supported"] = invalid_value
+    api = create_api(application=MalformedStateApplication(state))
+    client = TestClient(api)
+
+    response = client.post("/questions", json={"question": "Valid question"})
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "An internal error occurred while processing the question."
+
+
+def test_ask_question_missing_generation_attempts_returns_500() -> None:
+    """Verifies missing 'generation_attempts' key in final state returns HTTP 500."""
+    state = _valid_terminal_state()
+    del state["generation_attempts"]
+    api = create_api(application=MalformedStateApplication(state))
+    client = TestClient(api)
+
+    response = client.post("/questions", json={"question": "Valid question"})
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "An internal error occurred while processing the question."
+
+
+@pytest.mark.parametrize("invalid_value", ["1", True])
+def test_ask_question_invalid_generation_attempts_type_returns_500(
+    invalid_value: Any,
+) -> None:
+    """Verifies non-integer generation_attempts values (str, bool) return HTTP 500."""
+    state = _valid_terminal_state()
+    state["generation_attempts"] = invalid_value
+    api = create_api(application=MalformedStateApplication(state))
+    client = TestClient(api)
+
+    response = client.post("/questions", json={"question": "Valid question"})
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "An internal error occurred while processing the question."
+
+
+def test_ask_question_invalid_generation_attempts_range_returns_500() -> None:
+    """Verifies negative generation_attempts value (-1) returns HTTP 500."""
+    state = _valid_terminal_state()
+    state["generation_attempts"] = -1
+    api = create_api(application=MalformedStateApplication(state))
+    client = TestClient(api)
+
+    response = client.post("/questions", json={"question": "Valid question"})
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "An internal error occurred while processing the question."
+
+
+def test_ask_question_missing_trace_returns_500() -> None:
+    """Verifies missing 'trace' key in final state returns HTTP 500."""
+    state = _valid_terminal_state()
+    del state["trace"]
+    api = create_api(application=MalformedStateApplication(state))
+    client = TestClient(api)
+
+    response = client.post("/questions", json={"question": "Valid question"})
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "An internal error occurred while processing the question."
+
+
+@pytest.mark.parametrize("invalid_value", [[], "trace"])
+def test_ask_question_wrong_trace_type_returns_500(invalid_value: Any) -> None:
+    """Verifies non-DecisionTrace 'trace' values (list, str) return HTTP 500."""
+    state = _valid_terminal_state()
+    state["trace"] = invalid_value
+    api = create_api(application=MalformedStateApplication(state))
+    client = TestClient(api)
+
+    response = client.post("/questions", json={"question": "Valid question"})
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "An internal error occurred while processing the question."

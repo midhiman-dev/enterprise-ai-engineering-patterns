@@ -57,3 +57,7 @@ At enterprise production scale with horizontally scaled microservices:
 - The Domain port (`DecisionTraceRepository`) remains unchanged.
 - The SQLite adapter is swapped for a `PostgresDecisionTraceRepository` or an asynchronous audit pipeline (e.g. Kafka event streaming to an analytical store).
 - Storage evolves without modifying graph nodes or domain logic.
+
+### Q5: "How should an API boundary handle malformed terminal state returned by an AI application?"
+**Answer:**
+The API boundary must strictly validate terminal application state against the expected application contract. If required keys (`answer`, `is_supported`, `generation_attempts`, `trace`) are missing or contain malformed types, the API returns **HTTP 500 Internal Server Error**. The API boundary must never manufacture fallback domain entities (such as fake refusal text) to repair broken runtime state, as doing so masks application invariant violations and conflates explicit domain refusals with internal system defects.
