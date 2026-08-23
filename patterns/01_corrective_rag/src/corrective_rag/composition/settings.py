@@ -48,27 +48,44 @@ def load_application_settings_from_env() -> ApplicationSettings:
         CRAG_CHROMA_COLLECTION: Vector collection name (default: corrective-rag-kb).
         CRAG_RETRIEVER_TOP_K: Retrieval candidate limit (default: 4).
 
+    Semantics:
+        - Absent environment variable: Uses documented default value.
+        - Valid non-blank environment variable: Uses trimmed string value.
+        - Explicitly blank or whitespace-only environment variable: Fails fast and raises ValueError.
+
     Returns:
         Validated ApplicationSettings instance.
 
     Raises:
-        ValueError: If environment variable values violate configuration invariants.
+        ValueError: If an environment variable is explicitly blank, whitespace-only, or invalid.
     """
     raw_path = os.getenv("CRAG_CHROMA_PATH")
-    chroma_path = raw_path.strip() if raw_path and raw_path.strip() else DEFAULT_CHROMA_PATH
+    if raw_path is None:
+        chroma_path = DEFAULT_CHROMA_PATH
+    else:
+        trimmed_path = raw_path.strip()
+        if not trimmed_path:
+            raise ValueError("CRAG_CHROMA_PATH cannot be blank.")
+        chroma_path = trimmed_path
 
     raw_collection = os.getenv("CRAG_CHROMA_COLLECTION")
-    chroma_collection = (
-        raw_collection.strip()
-        if raw_collection and raw_collection.strip()
-        else DEFAULT_CHROMA_COLLECTION
-    )
+    if raw_collection is None:
+        chroma_collection = DEFAULT_CHROMA_COLLECTION
+    else:
+        trimmed_collection = raw_collection.strip()
+        if not trimmed_collection:
+            raise ValueError("CRAG_CHROMA_COLLECTION cannot be blank.")
+        chroma_collection = trimmed_collection
 
-    top_k = DEFAULT_RETRIEVER_TOP_K
     raw_top_k = os.getenv("CRAG_RETRIEVER_TOP_K")
-    if raw_top_k and raw_top_k.strip():
+    if raw_top_k is None:
+        top_k = DEFAULT_RETRIEVER_TOP_K
+    else:
+        trimmed_top_k = raw_top_k.strip()
+        if not trimmed_top_k:
+            raise ValueError("CRAG_RETRIEVER_TOP_K cannot be blank.")
         try:
-            parsed_top_k = int(raw_top_k.strip())
+            parsed_top_k = int(trimmed_top_k)
         except ValueError as exc:
             raise ValueError(
                 f"Invalid CRAG_RETRIEVER_TOP_K: '{raw_top_k}'. Must be a positive integer."

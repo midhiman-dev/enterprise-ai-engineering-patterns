@@ -64,8 +64,10 @@ While each adapter maintains a distinct semantic responsibility and satisfies a 
 Environment variable resolution occurs strictly during startup inside configuration loader functions (`load_application_settings_from_env()`, `load_groq_config_from_env()`, `load_tavily_config_from_env()`).
 
 * Business and application logic never invoke `os.getenv()` during execution.
+* Defaults apply when an optional environment variable is absent (`os.getenv(...) is None`). An explicitly configured blank or whitespace-only value (`""`, `" "`) is treated as invalid configuration and causes startup to fail fast with `ValueError`.
 * If required API keys (`GROQ_API_KEY`, `TAVILY_API_KEY`) or invalid composition settings (`retriever_top_k <= 0`) are encountered, composition **fails fast** with an explicit exception during startup.
 * Production composition never falls back to test doubles or placeholder keys.
+
 
 ---
 
