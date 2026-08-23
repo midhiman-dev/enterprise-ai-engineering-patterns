@@ -5,7 +5,6 @@ Provides explicit dependency injection of Domain ports required by Application n
 
 from dataclasses import dataclass
 
-from corrective_rag.domain.ports.decision_trace_repository import DecisionTraceRepository
 from corrective_rag.domain.ports.generator import Generator
 from corrective_rag.domain.ports.hallucination_checker import HallucinationChecker
 from corrective_rag.domain.ports.query_rewriter import QueryRewriter
@@ -27,4 +26,3 @@ class WorkflowDependencies:
     generator: Generator
     web_search_provider: WebSearchProvider
     hallucination_checker: HallucinationChecker
-    decision_trace_repository: DecisionTraceRepository | None = None

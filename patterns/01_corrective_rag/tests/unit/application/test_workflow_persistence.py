@@ -3,7 +3,6 @@
 import pytest
 
 from corrective_rag.application.application import CorrectiveRAGApplication
-from corrective_rag.application.use_cases.run_workflow import run_workflow
 from corrective_rag.application.workflow import build_graph
 from corrective_rag.application.workflow_dependencies import WorkflowDependencies
 from corrective_rag.domain.entities.answer import Answer, AnswerStatus
@@ -34,12 +33,11 @@ def test_golden_query_1_straight_path_persists_trace() -> None:
         generator=FakeGenerator(answer=expected_answer),
         web_search_provider=FakeWebSearchProvider(),
         hallucination_checker=FakeHallucinationChecker(is_supported=True),
-        decision_trace_repository=fake_repo,
     )
 
     app = CorrectiveRAGApplication(
         graph=build_graph(deps),
-        repository=deps.decision_trace_repository,
+        repository=fake_repo,
     )
 
     result = app.run(question=question)
@@ -70,12 +68,11 @@ def test_golden_query_2_corrective_path_persists_trace() -> None:
         ),
         web_search_provider=FakeWebSearchProvider(documents=[web_doc]),
         hallucination_checker=FakeHallucinationChecker(is_supported=True),
-        decision_trace_repository=fake_repo,
     )
 
     app = CorrectiveRAGApplication(
         graph=build_graph(deps),
-        repository=deps.decision_trace_repository,
+        repository=fake_repo,
     )
 
     result = app.run(question=question)
@@ -112,12 +109,11 @@ def test_golden_query_3_safe_refusal_persists_trace() -> None:
             documents=[Document(content="Search result", source="web")]
         ),
         hallucination_checker=FakeHallucinationChecker(is_supported=False),
-        decision_trace_repository=fake_repo,
     )
 
     app = CorrectiveRAGApplication(
         graph=build_graph(deps),
-        repository=deps.decision_trace_repository,
+        repository=fake_repo,
     )
 
     result = app.run(question=question)
@@ -158,12 +154,11 @@ def test_persistence_failure_raises_operational_exception() -> None:
         generator=FakeGenerator(answer=Answer(text="Valid answer", status=AnswerStatus.ANSWERED)),
         web_search_provider=FakeWebSearchProvider(),
         hallucination_checker=FakeHallucinationChecker(is_supported=True),
-        decision_trace_repository=broken_repo,  # type: ignore[arg-type]
     )
 
     app = CorrectiveRAGApplication(
         graph=build_graph(deps),
-        repository=deps.decision_trace_repository,
+        repository=broken_repo,  # type: ignore[arg-type]
     )
 
     with pytest.raises(RuntimeError, match="Database connection failure during save"):

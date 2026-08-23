@@ -7,7 +7,6 @@ and compiles the LangGraph StateGraph application.
 from typing import Any
 
 import chromadb
-from langgraph.graph.state import CompiledStateGraph
 
 from corrective_rag.application.application import CorrectiveRAGApplication
 from corrective_rag.application.workflow import build_graph
@@ -52,7 +51,6 @@ def build_dependencies(
     groq_client: GroqChatClient | None = None,
     tavily_client: TavilySearchClient | None = None,
     chroma_collection: Any | None = None,
-    decision_trace_repository: DecisionTraceRepository | None = None,
 ) -> WorkflowDependencies:
     """Constructs concrete Infrastructure capability adapters and injects them into WorkflowDependencies.
 
@@ -63,10 +61,9 @@ def build_dependencies(
         groq_client: Optional GroqChatClient override for shared low-level SDK client.
         tavily_client: Optional TavilySearchClient override for search SDK client.
         chroma_collection: Optional Chroma collection instance override.
-        decision_trace_repository: Optional DecisionTraceRepository override. If None, instantiated as SQLiteDecisionTraceRepository.
 
     Returns:
-        Fully wired WorkflowDependencies container.
+        Fully wired WorkflowDependencies container holding graph capability adapters.
 
     Raises:
         ValueError: If required environment configurations are missing or invalid.
@@ -88,9 +85,6 @@ def build_dependencies(
             name=settings.chroma_collection,
             embedding_function=embedding_fn,
         )
-
-    if decision_trace_repository is None:
-        decision_trace_repository = SQLiteDecisionTraceRepository(db_path=settings.trace_db_path)
 
     retriever = ChromaRetriever(
         collection=chroma_collection,
@@ -124,7 +118,6 @@ def build_dependencies(
         generator=generator,
         web_search_provider=web_search_provider,
         hallucination_checker=hallucination_checker,
-        decision_trace_repository=decision_trace_repository,
     )
 
 
@@ -141,7 +134,7 @@ def build_application(
     """Builds, compiles, and packages the Corrective RAG application runtime.
 
     Args:
-        settings: Optional composition settings.
+        settings: Optional composition settings. If None, loaded from env.
         dependencies: Optional pre-constructed WorkflowDependencies container.
         groq_config: Optional Groq configuration override.
         tavily_config: Optional Tavily configuration override.
@@ -153,6 +146,8 @@ def build_application(
     Returns:
         CorrectiveRAGApplication runtime boundary bundling compiled state graph and decision trace repository.
     """
+    settings = settings or load_application_settings_from_env()
+
     if dependencies is None:
         dependencies = build_dependencies(
             settings=settings,
@@ -161,11 +156,14 @@ def build_application(
             groq_client=groq_client,
             tavily_client=tavily_client,
             chroma_collection=chroma_collection,
-            decision_trace_repository=decision_trace_repository,
         )
 
     graph = build_graph(dependencies)
+
+    if decision_trace_repository is None:
+        decision_trace_repository = SQLiteDecisionTraceRepository(db_path=settings.trace_db_path)
+
     return CorrectiveRAGApplication(
         graph=graph,
-        repository=dependencies.decision_trace_repository,
+        repository=decision_trace_repository,
     )

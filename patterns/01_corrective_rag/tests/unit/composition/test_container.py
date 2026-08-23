@@ -1,5 +1,6 @@
 """Unit tests for Composition Root dependency wiring and application assembly."""
 
+import pathlib
 from unittest.mock import MagicMock
 
 import chromadb
@@ -65,7 +66,7 @@ def test_build_dependencies_selects_real_adapters(
     mock_tavily_client: TavilySearchClient,
     mock_chroma_collection: chromadb.Collection,
 ) -> None:
-    """Verifies build_dependencies instantiates all seven real concrete Infrastructure adapters."""
+    """Verifies build_dependencies instantiates all six graph concrete Infrastructure capability adapters."""
     settings = ApplicationSettings(retriever_top_k=5)
 
     deps = build_dependencies(
@@ -84,7 +85,7 @@ def test_build_dependencies_selects_real_adapters(
     assert isinstance(deps.generator, GroqGenerator)
     assert isinstance(deps.web_search_provider, TavilyWebSearchProvider)
     assert isinstance(deps.hallucination_checker, GroqHallucinationChecker)
-    assert isinstance(deps.decision_trace_repository, SQLiteDecisionTraceRepository)
+    assert not hasattr(deps, "decision_trace_repository")
 
 
 def test_groq_adapters_share_single_client_instance(
@@ -132,39 +133,16 @@ def test_workflow_dependencies_is_fully_populated(
     assert deps.generator is not None
     assert deps.web_search_provider is not None
     assert deps.hallucination_checker is not None
-    assert deps.decision_trace_repository is not None
 
 
-def test_build_dependencies_supports_decision_trace_repository_override(
+def test_build_application_produces_application_bundle_with_override(
     mock_groq_config: GroqConfig,
     mock_tavily_config: TavilyConfig,
     mock_groq_client: GroqChatClient,
     mock_tavily_client: TavilySearchClient,
     mock_chroma_collection: chromadb.Collection,
 ) -> None:
-    """Verifies build_dependencies accepts a custom decision_trace_repository override."""
-    fake_repo = FakeDecisionTraceRepository()
-    deps = build_dependencies(
-        groq_config=mock_groq_config,
-        tavily_config=mock_tavily_config,
-        groq_client=mock_groq_client,
-        tavily_client=mock_tavily_client,
-        chroma_collection=mock_chroma_collection,
-        decision_trace_repository=fake_repo,
-    )
-
-    assert deps.decision_trace_repository is fake_repo
-
-
-
-def test_build_application_produces_application_bundle(
-    mock_groq_config: GroqConfig,
-    mock_tavily_config: TavilyConfig,
-    mock_groq_client: GroqChatClient,
-    mock_tavily_client: TavilySearchClient,
-    mock_chroma_collection: chromadb.Collection,
-) -> None:
-    """Verifies build_application returns a CorrectiveRAGApplication bundling graph and repository."""
+    """Verifies build_application returns a CorrectiveRAGApplication bundling graph and custom repository override."""
     fake_repo = FakeDecisionTraceRepository()
     app = build_application(
         groq_config=mock_groq_config,
@@ -179,6 +157,31 @@ def test_build_application_produces_application_bundle(
     assert isinstance(app.graph, CompiledStateGraph)
     assert app.repository is fake_repo
 
+
+def test_build_application_defaults_to_sqlite_repository(
+    mock_groq_config: GroqConfig,
+    mock_tavily_config: TavilyConfig,
+    mock_groq_client: GroqChatClient,
+    mock_tavily_client: TavilySearchClient,
+    mock_chroma_collection: chromadb.Collection,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Verifies build_application creates SQLiteDecisionTraceRepository with settings.trace_db_path by default."""
+    custom_db_path = str(tmp_path / "custom_trace.db")
+    settings = ApplicationSettings(trace_db_path=custom_db_path)
+
+    app = build_application(
+        settings=settings,
+        groq_config=mock_groq_config,
+        tavily_config=mock_tavily_config,
+        groq_client=mock_groq_client,
+        tavily_client=mock_tavily_client,
+        chroma_collection=mock_chroma_collection,
+    )
+
+    assert isinstance(app, CorrectiveRAGApplication)
+    assert isinstance(app.repository, SQLiteDecisionTraceRepository)
+    assert app.repository.db_path == custom_db_path
 
 
 def test_missing_groq_api_key_fails_fast(

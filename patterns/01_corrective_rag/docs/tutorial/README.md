@@ -686,12 +686,25 @@ def build_dependencies(
 def build_application(
     settings: ApplicationSettings | None = None,
     dependencies: WorkflowDependencies | None = None,
-    ...
-) -> CompiledStateGraph:
-    if dependencies is None:
-        dependencies = build_dependencies(settings=settings, ...)
+    ...,
+    decision_trace_repository: DecisionTraceRepository | None = None,
+) -> CorrectiveRAGApplication:
+    settings = settings or load_application_settings_from_env()
 
-    return build_graph(dependencies)
+    workflow_dependencies = dependencies or build_dependencies(
+        settings=settings,
+        ...
+    )
+
+    graph = build_graph(workflow_dependencies)
+    repository = decision_trace_repository or SQLiteDecisionTraceRepository(
+        db_path=settings.trace_db_path
+    )
+
+    return CorrectiveRAGApplication(
+        graph=graph,
+        repository=repository,
+    )
 ```
 
 ### Dependency Inversion Principle (DIP) in Practice
@@ -699,13 +712,14 @@ def build_application(
 * **Domain Layer (`Retriever` Protocol):** Defines the abstract contract (`retrieve(question) -> Sequence[Document]`) without importing Chroma or vector store libraries.
 * **Infrastructure Layer (`ChromaRetriever`):** Implements the concrete retrieval mechanism using ChromaDB.
 * **Application Layer (`make_retrieve_node`):** Depends strictly on the `Retriever` protocol injected via `WorkflowDependencies`. It never imports Chroma or instantiates database clients.
-* **Composition Root (`build_dependencies`):** Decides that `Retriever = ChromaRetriever(collection, top_k)` and wires the implementation into `WorkflowDependencies`.
+* **Composition Root (`build_dependencies` & `build_application`):** Assembles graph capability adapters into `WorkflowDependencies`, compiles the graph, and packages `graph` + `DecisionTraceRepository` into `CorrectiveRAGApplication`.
 
 ### Key Architectural Takeaways
 
 1. **Where Concrete Classes Live**: Clean Architecture does not eliminate coupling; it concentrates concrete coupling at the outermost composition boundary.
 2. **Shared Provider Client**: Four separate Groq capability adapters (`Generator`, `RelevanceGrader`, `QueryRewriter`, `HallucinationChecker`) share a single low-level `GroqSdkChatClient` instance. Interface segregation is maintained without duplicating network connections.
-3. **Fail-Fast Startup**: Configuration validation happens synchronously during startup, preventing partial runtime execution with missing credentials.
+3. **Graph vs. Runtime Ownership**: `WorkflowDependencies` contains only dependencies required by LangGraph nodes. Trace persistence is an application-runtime concern owned by `CorrectiveRAGApplication`.
+4. **Fail-Fast Startup**: Configuration validation happens synchronously during startup, preventing partial runtime execution with missing credentials.
 
 ---
 
@@ -722,6 +736,14 @@ def build_application(
 > **Interview Question:** Should I create one Groq client per capability adapter?
 
 **Answer:** No. Keeping capability interfaces separate (Interface Segregation) does not require creating separate network clients or connection pools. The four Groq capability adapters share a single underlying SDK client instance.
+
+> **Interview Question:** Should every dependency go into one DI container?
+
+**Answer:** No. Dependency ownership should follow lifecycle and consumer responsibility. In this system, graph nodes require six AI/retrieval capability ports, whereas the application runtime additionally requires `DecisionTrace` persistence. Putting persistence into the graph dependency container when no graph node consumes it obscures responsibility. Dependency containers should strictly match their actual consumers.
+
+> **Interview Question:** Why not expose SQLite's trace ID directly?
+
+**Answer:** Database identity and application identity are distinct concepts. An application-level execution/correlation ID must be designed around external API, tracing, and multi-tenant requirements (e.g. UUID, correlation headers, stability across database migrations). The database's internal auto-increment integer primary key is an Infrastructure detail. Exposing database row IDs directly into Domain entities leaks storage implementation details.
 
 ---
 

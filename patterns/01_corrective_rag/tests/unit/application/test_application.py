@@ -31,7 +31,6 @@ def test_corrective_rag_application_run_executes_and_persists() -> None:
         generator=FakeGenerator(answer=expected_answer),
         web_search_provider=FakeWebSearchProvider(),
         hallucination_checker=FakeHallucinationChecker(is_supported=True),
-        decision_trace_repository=fake_repo,
     )
 
     graph = build_graph(deps)

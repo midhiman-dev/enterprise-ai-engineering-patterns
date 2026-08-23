@@ -70,6 +70,31 @@ A critical security and governance distinction:
 - A completed `DecisionTrace` persists atomically. If any step fails to insert, the entire transaction rolls back, preventing partially written audit traces.
 - If database persistence fails, the repository raises an operational `RuntimeError`. Persistence failures are system failures and are never converted into `AnswerStatus.UNSUPPORTED` (which represents evidence/AI grounding outcomes).
 
+## Current Trace Identity Limitation
+
+### SQLite Internal Primary Key vs. Domain Identity
+SQLite assigns an internal relational primary key (`decision_traces.id INTEGER PRIMARY KEY AUTOINCREMENT`) when a trace is persisted. That identifier is currently an Infrastructure implementation detail.
+
+The Domain `DecisionTrace` entity and the `CorrectiveRAGApplication.run()` execution result do NOT expose a durable, externally addressable trace identifier. `DecisionTraceRepository.save()` returns `None`.
+
+Therefore, helper queries such as `fetch_trace_steps_by_id(...)` exist purely as Infrastructure/local inspection capabilities. They do NOT constitute a stable public application or API contract. This decoupling is deliberate.
+
+### Why Not Add UUID or Trace ID Now?
+A public trace/execution identity must be introduced because an explicit application or API requirement demands it—not simply because a relational database table requires a primary key.
+
+In production systems, an externally addressable execution/trace identity serves specific requirements:
+- Returning an execution reference header in HTTP API responses,
+- Querying a historical trace via an API endpoint (`GET /traces/{trace_id}`),
+- Correlating workflow traces with application logs and distributed OpenTelemetry traces,
+- Enabling distributed tracing, tenant isolation, or idempotency checks.
+
+Database identity (auto-increment integer) and application identity (UUID, correlation ID) represent distinct concepts. Exposing an internal SQLite integer primary key into the Domain entity would accidentally leak persistence implementation details into the pure domain boundary.
+
+### API Guardrail for Pass-14
+Until an application-level trace execution identity is deliberately designed:
+- Do **NOT** claim support for `GET /traces/{trace_id}` as a stable public API contract.
+- Pass-14 may initially expose the decision trace inline within current request responses, or introduce an explicit execution correlation identity as a separate decision. Neither option is implemented in Pass-13B.
+
 ## Production Scaling Evolution (Design-Only)
 For production deployment at enterprise scale:
 - Replace `SQLiteDecisionTraceRepository` with a `PostgresDecisionTraceRepository` implementing the same `DecisionTraceRepository` Domain port.
