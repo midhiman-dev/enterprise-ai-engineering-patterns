@@ -1,4 +1,10 @@
 """Infrastructure Persistence package.
 
-Will contain concrete implementations of the DecisionTraceRepository port (e.g., SQLiteDecisionTraceRepository).
+Contains concrete implementations of the DecisionTraceRepository port (SQLiteDecisionTraceRepository).
 """
+
+from corrective_rag.infrastructure.persistence.sqlite_decision_trace_repository import (
+    SQLiteDecisionTraceRepository,
+)
+
+__all__ = ["SQLiteDecisionTraceRepository"]

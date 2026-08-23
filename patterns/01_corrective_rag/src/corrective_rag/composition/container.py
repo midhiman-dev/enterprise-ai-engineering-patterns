@@ -15,6 +15,7 @@ from corrective_rag.composition.settings import (
     ApplicationSettings,
     load_application_settings_from_env,
 )
+from corrective_rag.domain.ports.decision_trace_repository import DecisionTraceRepository
 from corrective_rag.infrastructure.embeddings.local_embedding import DefaultLocalEmbeddingFunction
 from corrective_rag.infrastructure.generation.groq_client import (
     GroqChatClient,
@@ -26,6 +27,7 @@ from corrective_rag.infrastructure.generation.groq_config import (
 )
 from corrective_rag.infrastructure.generation.groq_generator import GroqGenerator
 from corrective_rag.infrastructure.grading.groq_relevance_grader import GroqRelevanceGrader
+from corrective_rag.infrastructure.persistence import SQLiteDecisionTraceRepository
 from corrective_rag.infrastructure.retrieval.chroma_retriever import ChromaRetriever
 from corrective_rag.infrastructure.search.groq_query_rewriter import GroqQueryRewriter
 from corrective_rag.infrastructure.search.tavily_client import (
@@ -49,6 +51,7 @@ def build_dependencies(
     groq_client: GroqChatClient | None = None,
     tavily_client: TavilySearchClient | None = None,
     chroma_collection: Any | None = None,
+    decision_trace_repository: DecisionTraceRepository | None = None,
 ) -> WorkflowDependencies:
     """Constructs concrete Infrastructure capability adapters and injects them into WorkflowDependencies.
 
@@ -59,6 +62,7 @@ def build_dependencies(
         groq_client: Optional GroqChatClient override for shared low-level SDK client.
         tavily_client: Optional TavilySearchClient override for search SDK client.
         chroma_collection: Optional Chroma collection instance override.
+        decision_trace_repository: Optional DecisionTraceRepository override. If None, instantiated as SQLiteDecisionTraceRepository.
 
     Returns:
         Fully wired WorkflowDependencies container.
@@ -83,6 +87,9 @@ def build_dependencies(
             name=settings.chroma_collection,
             embedding_function=embedding_fn,
         )
+
+    if decision_trace_repository is None:
+        decision_trace_repository = SQLiteDecisionTraceRepository(db_path=settings.trace_db_path)
 
     retriever = ChromaRetriever(
         collection=chroma_collection,
@@ -116,6 +123,7 @@ def build_dependencies(
         generator=generator,
         web_search_provider=web_search_provider,
         hallucination_checker=hallucination_checker,
+        decision_trace_repository=decision_trace_repository,
     )
 
 
@@ -127,6 +135,7 @@ def build_application(
     groq_client: GroqChatClient | None = None,
     tavily_client: TavilySearchClient | None = None,
     chroma_collection: Any | None = None,
+    decision_trace_repository: DecisionTraceRepository | None = None,
 ) -> CompiledStateGraph:
     """Builds and compiles the Corrective RAG LangGraph workflow.
 
@@ -138,6 +147,7 @@ def build_application(
         groq_client: Optional Groq client override.
         tavily_client: Optional Tavily client override.
         chroma_collection: Optional Chroma collection override.
+        decision_trace_repository: Optional decision trace repository override.
 
     Returns:
         CompiledStateGraph application ready for state execution.
@@ -150,6 +160,7 @@ def build_application(
             groq_client=groq_client,
             tavily_client=tavily_client,
             chroma_collection=chroma_collection,
+            decision_trace_repository=decision_trace_repository,
         )
 
     return build_graph(dependencies)

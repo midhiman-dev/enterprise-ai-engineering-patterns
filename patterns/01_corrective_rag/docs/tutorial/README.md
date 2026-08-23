@@ -1,6 +1,6 @@
 # Use Case 01 — Step-by-Step Tutorial
 
-> **Current Status:** 🟢 **Pass-12 Implemented.** Composition Root (`src/corrective_rag/composition/`), application settings (`ApplicationSettings`, `load_application_settings_from_env`), container assembly (`build_dependencies`, `build_application`), offline unit tests, and ADR-008 are complete and verified. Implemented real adapters include Chroma Retriever, Groq Generator, Groq RelevanceGrader, Groq QueryRewriter, Tavily WebSearchProvider, and Groq HallucinationChecker.
+> **Current Status:** 🟢 **Pass-13 Implemented.** SQLite DecisionTrace Persistence (`src/corrective_rag/infrastructure/persistence/sqlite_decision_trace_repository.py`), `run_workflow` application use case, `CRAG_TRACE_DB_PATH` composition settings (`ApplicationSettings`), offline unit/integration tests, ADR-009, and tutorial documentation are complete and verified.
 
 
 ## Overview
@@ -30,13 +30,13 @@ The tutorial follows a deliberate learning sequence designed to isolate framewor
 13. **Tavily Web Search Adapter** — Concrete implementation of `WebSearchProvider` (`TavilyWebSearchProvider`). (Implemented)
 14. **Groq Hallucination Checker** — Concrete implementation of `HallucinationChecker` (`GroqHallucinationChecker`). (Implemented)
 15. **Composition Root** — Assembling graph orchestration with concrete adapters. (Implemented)
-
-16. **Decision Trace Persistence** — SQLite storage implementation of `DecisionTraceRepository`.
+16. **Decision Trace Persistence** — SQLite storage implementation of `DecisionTraceRepository` (`SQLiteDecisionTraceRepository`). (Implemented)
 
 17. **FastAPI / Interface** — Exposing HTTP/SSE endpoints for query processing and decision trace inspection.
 18. **Integration & Golden Acceptance Tests** — Running golden queries against full adapter stack.
 19. **Decision Trace Inspection** — Auditing system decisions across local vs. web fallback routes.
 20. **Production Evolution & Interview Lessons** — System design trade-offs and scaling strategies.
+
 
 
 ---

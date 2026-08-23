@@ -1,4 +1,8 @@
 """Application Use Cases package.
 
-Will house high-level application orchestrators such as AnswerQuestionUseCase.
+Houses high-level application orchestrators such as run_workflow.
 """
+
+from corrective_rag.application.use_cases.run_workflow import run_workflow
+
+__all__ = ["run_workflow"]

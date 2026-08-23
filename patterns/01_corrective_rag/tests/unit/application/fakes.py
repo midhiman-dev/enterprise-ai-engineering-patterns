@@ -7,12 +7,14 @@ enabling deterministic, unit-testable Application graph execution.
 from collections.abc import Sequence
 
 from corrective_rag.domain.entities.answer import Answer, AnswerStatus
+from corrective_rag.domain.entities.decision_trace import DecisionTrace
 from corrective_rag.domain.entities.document import Document
 from corrective_rag.domain.entities.graded_document import GradedDocument
 from corrective_rag.domain.entities.question import Question
 
 
 class FakeRetriever:
+
     """Fake retriever returning predefined documents and recording received questions.
 
     Note: Satisfies Retriever port structurally. Does NOT inherit from Retriever.
@@ -152,3 +154,16 @@ class FakeWebSearchProvider:
     def search(self, question: Question) -> Sequence[Document]:
         self.received_questions.append(question)
         return self._documents
+
+
+class FakeDecisionTraceRepository:
+    """Fake DecisionTrace repository capturing saved traces for testing assertions.
+
+    Note: Satisfies DecisionTraceRepository port structurally. Does NOT inherit from DecisionTraceRepository.
+    """
+
+    def __init__(self) -> None:
+        self.saved_traces: list[DecisionTrace] = []
+
+    def save(self, trace: DecisionTrace) -> None:
+        self.saved_traces.append(trace)

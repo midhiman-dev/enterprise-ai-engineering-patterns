@@ -220,3 +220,8 @@ __marimo__/
 # Vector Store Data
 **/data/chroma/
 *.chroma
+
+# SQLite Trace Data
+**/data/traces/
+*.db
+*.sqlite
