@@ -11,3 +11,4 @@ This directory captures architectural decisions for Use Case 01 (Corrective RAG 
 * [ADR-005: LLM Query Rewriting for Corrective Retrieval](ADR-005-llm-query-rewriting-for-corrective-retrieval.md) — *Accepted*
 * [ADR-006: Tavily Web Search for Corrective Retrieval](ADR-006-tavily-web-search-for-corrective-retrieval.md) — *Accepted*
 * [ADR-007: Evidence Grounding Verification for Generated Answers](ADR-007-evidence-grounding-verification.md) — *Accepted*
+* [ADR-008: Composition Root and Real Adapter Runtime Wiring](ADR-008-composition-root-and-runtime-wiring.md) — *Accepted*

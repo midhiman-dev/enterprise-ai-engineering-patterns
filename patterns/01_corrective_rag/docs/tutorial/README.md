@@ -1,6 +1,6 @@
 # Use Case 01 — Step-by-Step Tutorial
 
-> **Current Status:** 🟢 **Pass-11 Implemented.** Groq grounding verification adapter (`GroqHallucinationChecker`), message builder (`build_grounding_check_messages`), validated JSON parser (`parse_grounding_result`), internal result model (`GroqGroundingResult`), offline unit tests, opt-in live smoke test (`test_groq_hallucination_checker_live.py`), and ADR-007 are complete and verified. Implemented real adapters now include Chroma Retriever, Groq Generator, Groq RelevanceGrader, Groq QueryRewriter, Tavily WebSearchProvider, and Groq HallucinationChecker.
+> **Current Status:** 🟢 **Pass-12 Implemented.** Composition Root (`src/corrective_rag/composition/`), application settings (`ApplicationSettings`, `load_application_settings_from_env`), container assembly (`build_dependencies`, `build_application`), offline unit tests, and ADR-008 are complete and verified. Implemented real adapters include Chroma Retriever, Groq Generator, Groq RelevanceGrader, Groq QueryRewriter, Tavily WebSearchProvider, and Groq HallucinationChecker.
 
 
 ## Overview
@@ -28,11 +28,11 @@ The tutorial follows a deliberate learning sequence designed to isolate framewor
 11. **Groq Relevance Grader** — Concrete implementation of `RelevanceGrader` (`GroqRelevanceGrader`). (Implemented)
 12. **Groq Query Rewriter** — Concrete implementation of `QueryRewriter` (`GroqQueryRewriter`). (Implemented)
 13. **Tavily Web Search Adapter** — Concrete implementation of `WebSearchProvider` (`TavilyWebSearchProvider`). (Implemented)
-
 14. **Groq Hallucination Checker** — Concrete implementation of `HallucinationChecker` (`GroqHallucinationChecker`). (Implemented)
+15. **Composition Root** — Assembling graph orchestration with concrete adapters. (Implemented)
 
-15. **Decision Trace Persistence** — SQLite storage implementation of `DecisionTraceRepository`.
-16. **Composition Root** — Assembling graph orchestration with concrete adapters.
+16. **Decision Trace Persistence** — SQLite storage implementation of `DecisionTraceRepository`.
+
 17. **FastAPI / Interface** — Exposing HTTP/SSE endpoints for query processing and decision trace inspection.
 18. **Integration & Golden Acceptance Tests** — Running golden queries against full adapter stack.
 19. **Decision Trace Inspection** — Auditing system decisions across local vs. web fallback routes.
@@ -599,7 +599,134 @@ class GroqHallucinationChecker:
 
 ---
 
+## Pass-12 Learning Outline — Composition Root and Runtime Wiring
+
+Pass-12 demonstrates how the explicit Clean Architecture Composition Root assembles concrete Infrastructure adapters, constructs `WorkflowDependencies`, and compiles the application LangGraph state graph.
+
+```text
+ApplicationSettings + Provider Configs (GroqConfig, TavilyConfig)
+                    ↓
+         Infrastructure Adapters
+ (ChromaRetriever, GroqGenerator, GroqRelevanceGrader,
+  GroqQueryRewriter, TavilyWebSearchProvider, GroqHallucinationChecker)
+                    ↓
+          WorkflowDependencies
+                    ↓
+         build_graph(dependencies)
+                    ↓
+        Compiled StateGraph Application
+```
+
+### Real Composition Code
+
+Below is the verified composition root implementation from `src/corrective_rag/composition/container.py`:
+
+```python
+def build_dependencies(
+    settings: ApplicationSettings | None = None,
+    groq_config: GroqConfig | None = None,
+    tavily_config: TavilyConfig | None = None,
+    groq_client: GroqChatClient | None = None,
+    tavily_client: TavilySearchClient | None = None,
+    chroma_collection: Any | None = None,
+) -> WorkflowDependencies:
+    settings = settings or load_application_settings_from_env()
+    groq_config = groq_config or load_groq_config_from_env()
+    tavily_config = tavily_config or load_tavily_config_from_env()
+
+    if groq_client is None:
+        groq_client = GroqSdkChatClient(api_key=groq_config.api_key)
+
+    if tavily_client is None:
+        tavily_client = TavilySdkSearchClient(api_key=tavily_config.api_key)
+
+    if chroma_collection is None:
+        embedding_fn = DefaultLocalEmbeddingFunction()
+        chroma_client = chromadb.PersistentClient(path=settings.chroma_path)
+        chroma_collection = chroma_client.get_or_create_collection(
+            name=settings.chroma_collection,
+            embedding_function=embedding_fn,
+        )
+
+    retriever = ChromaRetriever(
+        collection=chroma_collection,
+        top_k=settings.retriever_top_k,
+    )
+    relevance_grader = GroqRelevanceGrader(
+        config=groq_config,
+        client=groq_client,
+    )
+    query_rewriter = GroqQueryRewriter(
+        config=groq_config,
+        client=groq_client,
+    )
+    generator = GroqGenerator(
+        config=groq_config,
+        client=groq_client,
+    )
+    web_search_provider = TavilyWebSearchProvider(
+        config=tavily_config,
+        client=tavily_client,
+    )
+    hallucination_checker = GroqHallucinationChecker(
+        config=groq_config,
+        client=groq_client,
+    )
+
+    return WorkflowDependencies(
+        retriever=retriever,
+        relevance_grader=relevance_grader,
+        query_rewriter=query_rewriter,
+        generator=generator,
+        web_search_provider=web_search_provider,
+        hallucination_checker=hallucination_checker,
+    )
+
+
+def build_application(
+    settings: ApplicationSettings | None = None,
+    dependencies: WorkflowDependencies | None = None,
+    ...
+) -> CompiledStateGraph:
+    if dependencies is None:
+        dependencies = build_dependencies(settings=settings, ...)
+
+    return build_graph(dependencies)
+```
+
+### Dependency Inversion Principle (DIP) in Practice
+
+* **Domain Layer (`Retriever` Protocol):** Defines the abstract contract (`retrieve(question) -> Sequence[Document]`) without importing Chroma or vector store libraries.
+* **Infrastructure Layer (`ChromaRetriever`):** Implements the concrete retrieval mechanism using ChromaDB.
+* **Application Layer (`make_retrieve_node`):** Depends strictly on the `Retriever` protocol injected via `WorkflowDependencies`. It never imports Chroma or instantiates database clients.
+* **Composition Root (`build_dependencies`):** Decides that `Retriever = ChromaRetriever(collection, top_k)` and wires the implementation into `WorkflowDependencies`.
+
+### Key Architectural Takeaways
+
+1. **Where Concrete Classes Live**: Clean Architecture does not eliminate coupling; it concentrates concrete coupling at the outermost composition boundary.
+2. **Shared Provider Client**: Four separate Groq capability adapters (`Generator`, `RelevanceGrader`, `QueryRewriter`, `HallucinationChecker`) share a single low-level `GroqSdkChatClient` instance. Interface segregation is maintained without duplicating network connections.
+3. **Fail-Fast Startup**: Configuration validation happens synchronously during startup, preventing partial runtime execution with missing credentials.
+
+---
+
+## Interview Guide — Composition Root & Dependency Inversion
+
+> **Interview Question:** If your Application layer cannot import Chroma or Groq, where do you instantiate them?
+
+**Answer:** At the composition root / startup boundary. The composition root is deliberately the single place in the system that knows both the abstract contracts (Domain/Application) and concrete implementations (Infrastructure), instantiating providers and injecting them into use cases.
+
+> **Interview Question:** Why not use a Dependency Injection framework?
+
+**Answer:** An explicit Python composition root is transparent, learner-friendly, easy to trace, and requires zero framework magic or external runtime dependencies. DI frameworks become useful when managing large object graphs with complex lifecycles, but core architecture should never depend on a DI framework.
+
+> **Interview Question:** Should I create one Groq client per capability adapter?
+
+**Answer:** No. Keeping capability interfaces separate (Interface Segregation) does not require creating separate network clients or connection pools. The four Groq capability adapters share a single underlying SDK client instance.
+
+---
+
 ## Apply the Pattern Yourself
+
 
 
 After completing the reference tutorial, use the [Pattern 01 Learner Assignment](../assignment/ASSIGNMENT.md) to apply **Corrective RAG** independently to a different enterprise technical-support problem.

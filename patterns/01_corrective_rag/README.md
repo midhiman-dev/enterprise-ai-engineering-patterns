@@ -1,6 +1,6 @@
 # Use Case 01 — Corrective RAG for Kubernetes Troubleshooting
 
-> **Current Status:** 🟢 **Pass-11 — Groq HallucinationChecker / Grounding Support Verifier Infrastructure Adapter Implemented.** Groq grounding verification adapter (`GroqHallucinationChecker`), message builder (`build_grounding_check_messages`), validated JSON parser (`parse_grounding_result`), internal result model (`GroqGroundingResult`), offline unit tests, opt-in live smoke test (`test_groq_hallucination_checker_live.py`), and ADR-007 are fully implemented and verified. Implemented real adapters now include Chroma Retriever, Groq Generator, Groq RelevanceGrader, Groq QueryRewriter, Tavily WebSearchProvider, and Groq HallucinationChecker. Full graph composition root, API, and UI remain to be wired in subsequent passes.
+> **Current Status:** 🟢 **Pass-12 — Composition Root and Real Adapter Wiring Implemented.** Composition Root (`src/corrective_rag/composition/`), application settings (`ApplicationSettings`, `load_application_settings_from_env`), container assembly (`build_dependencies`, `build_application`), offline unit tests, and ADR-008 are fully implemented and verified. All six real capability adapters (`ChromaRetriever`, `GroqGenerator`, `GroqRelevanceGrader`, `GroqQueryRewriter`, `TavilyWebSearchProvider`, `GroqHallucinationChecker`) are now wired into `WorkflowDependencies` and compiled into the LangGraph application.
 
 
 ---
@@ -61,6 +61,7 @@ Infrastructure (Chroma, Groq, Tavily, Persistence Adapters)
 * **Domain**: Pure Python entities (`Question`, `Document`, `GradedDocument`, `Answer`, `DecisionTrace`) and ports (`Retriever`, `RelevanceGrader`, `QueryRewriter`, `Generator`, `WebSearchProvider`, `HallucinationChecker`, `DecisionTraceRepository`). Zero third-party SDK dependencies.
 * **Application**: Houses the LangGraph workflow. Graph nodes invoke Domain ports.
 * **Infrastructure**: Implements Domain ports using concrete vendor SDKs.
+* **Composition**: Assembles concrete Infrastructure adapters into `WorkflowDependencies` and compiles the application graph.
 
 ---
 
@@ -86,6 +87,8 @@ Infrastructure (Chroma, Groq, Tavily, Persistence Adapters)
   * [ADR-005: LLM Query Rewriting for Corrective Retrieval](docs/adrs/ADR-005-llm-query-rewriting-for-corrective-retrieval.md)
   * [ADR-006: Tavily Web Search for Corrective Retrieval](docs/adrs/ADR-006-tavily-web-search-for-corrective-retrieval.md)
   * [ADR-007: Evidence Grounding Verification for Generated Answers](docs/adrs/ADR-007-evidence-grounding-verification.md)
+  * [ADR-008: Composition Root and Real Adapter Runtime Wiring](docs/adrs/ADR-008-composition-root-and-runtime-wiring.md)
+
 
 * [Step-by-Step Tutorial](docs/tutorial/README.md)
 * [Learner Assignment — Apply Corrective RAG to a Different Enterprise Support Problem](docs/assignment/ASSIGNMENT.md)
