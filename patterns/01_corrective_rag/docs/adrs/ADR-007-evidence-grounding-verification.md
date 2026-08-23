@@ -77,13 +77,18 @@ class HallucinationChecker(Protocol):
 
 ## Failure & Operational Semantics
 
-| Condition | Result / Action | Operational Meaning |
+| Condition | Result / Action | Operational Meaning & Workflow Routing |
 | :--- | :--- | :--- |
 | **Evidence supports answer** | `is_supported() -> True` | Workflow completes successfully (`END`). |
-| **Evidence lacks support / contradicts** | `is_supported() -> False` | Workflow routes to query rewriting / fallback search or safe refusal. |
+| **Evidence lacks support / contradicts** | `is_supported() -> False` | Retries candidate generation (`generate`) within bounded attempt budget (`MAX_GENERATION_ATTEMPTS=2`); routes to `safe_refusal` when budget is exhausted. |
 | **Empty document list (`[]`)** | `raise ValueError` | Invalid call parameters; caller passed no evidence to verify against. |
 | **API network / auth error** | `raise RuntimeError` | Provider infrastructure failure; propagated without collapsing to `False`. |
 | **Malformed JSON output** | `raise RuntimeError` | Verification pipeline failure; output contract violated. |
+
+> **Key Architectural Distinction: Retrieval Failure vs. Grounding Failure**
+> * **Retrieval Failure** (insufficient evidence detected at `grade_documents` node): Triggers corrective query rewriting (`rewrite_query`) and web search (`web_search`) to retrieve external evidence.
+> * **Grounding Failure** (`is_supported() -> False` detected at `hallucination_check` node): Indicates candidate answer is unsupported by evidence already available. The workflow performs bounded generation retry (`generate`) up to `MAX_GENERATION_ATTEMPTS` before terminating in `safe_refusal`. It does **not** return to query rewriting or web search.
+
 
 ---
 

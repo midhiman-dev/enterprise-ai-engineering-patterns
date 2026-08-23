@@ -465,7 +465,7 @@ class TavilyWebSearchProvider:
 Pass-11 demonstrates how evidence-grounding / support verification is implemented behind the Domain `HallucinationChecker` port using Groq prompt-constrained JSON and strict application-side validation.
 
 ```text
-Question + Candidate Answer
+Candidate Answer
           +
 Supplied Evidence Documents
           ↓
@@ -481,6 +481,7 @@ is_supported (True / False)
           ↓
 Application LangGraph Routing
 ```
+
 
 ### Domain Port Contract
 
@@ -593,7 +594,8 @@ class GroqHallucinationChecker:
 
 1. **Evidence Entailment vs. Fact Verification**: No. The hallucination checker is an evidence-grounding verifier. It evaluates whether the candidate answer is entailed by the specific evidence documents supplied to it during the workflow.
 2. **Untrusted Evidence Input**: If retrieved local documents or Tavily web results contain stale, inaccurate, or malicious text, a grounding checker will evaluate support against that input without verifying external truth.
-3. **Graph Routing Role**: The verifier returns a boolean (`True`/`False`) signal that LangGraph uses for conditional routing (e.g. accepting the answer vs. initiating a generation retry or safe refusal).
+3. **Graph Routing Role**: The verifier returns a boolean (`True`/`False`) signal that LangGraph uses for conditional routing: `is_supported=True` completes the workflow (`END`), while `is_supported=False` triggers bounded candidate regeneration (`generate`) using available evidence up to `MAX_GENERATION_ATTEMPTS=2` before routing to `safe_refusal`. (Note: grounding failure evaluates available evidence and does *not* return to query rewriting or web search).
+
 
 ---
 
