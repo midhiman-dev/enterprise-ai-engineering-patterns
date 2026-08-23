@@ -1,7 +1,8 @@
-"""Application unit tests verifying DecisionTrace persistence across terminal workflow paths."""
+"""Application unit tests verifying DecisionTrace persistence across terminal workflow paths via CorrectiveRAGApplication."""
 
 import pytest
 
+from corrective_rag.application.application import CorrectiveRAGApplication
 from corrective_rag.application.use_cases.run_workflow import run_workflow
 from corrective_rag.application.workflow import build_graph
 from corrective_rag.application.workflow_dependencies import WorkflowDependencies
@@ -20,10 +21,11 @@ from tests.unit.application.fakes import (
 
 
 def test_golden_query_1_straight_path_persists_trace() -> None:
-    """Golden Query 1: Straight-through workflow execution persists DecisionTrace once."""
+    """Golden Query 1: Straight-through workflow execution via Application runtime persists DecisionTrace once."""
     question = Question(text="Why does kubectl get pods show CrashLoopBackOff?")
     doc = Document(content="CrashLoopBackOff indicates container failure.", source="k8s.md")
     expected_answer = Answer(text="Container failure occurred.", status=AnswerStatus.ANSWERED)
+    fake_repo = FakeDecisionTraceRepository()
 
     deps = WorkflowDependencies(
         retriever=FakeRetriever(documents=[doc]),
@@ -32,13 +34,15 @@ def test_golden_query_1_straight_path_persists_trace() -> None:
         generator=FakeGenerator(answer=expected_answer),
         web_search_provider=FakeWebSearchProvider(),
         hallucination_checker=FakeHallucinationChecker(is_supported=True),
-        decision_trace_repository=FakeDecisionTraceRepository(),
+        decision_trace_repository=fake_repo,
     )
 
-    graph = build_graph(deps)
-    fake_repo = FakeDecisionTraceRepository()
+    app = CorrectiveRAGApplication(
+        graph=build_graph(deps),
+        repository=deps.decision_trace_repository,
+    )
 
-    result = run_workflow(graph=graph, question=question, repository=fake_repo)
+    result = app.run(question=question)
 
     assert result["answer"] == expected_answer
     assert len(fake_repo.saved_traces) == 1
@@ -52,9 +56,10 @@ def test_golden_query_1_straight_path_persists_trace() -> None:
 
 
 def test_golden_query_2_corrective_path_persists_trace() -> None:
-    """Golden Query 2: Corrective search workflow execution persists DecisionTrace once."""
+    """Golden Query 2: Corrective search workflow execution via Application runtime persists DecisionTrace once."""
     question = Question(text="What is the latest Kubernetes release?")
     web_doc = Document(content="Kubernetes 1.30 was released recently.", source="web_search")
+    fake_repo = FakeDecisionTraceRepository()
 
     deps = WorkflowDependencies(
         retriever=FakeRetriever(documents=[]),  # No local docs
@@ -65,13 +70,15 @@ def test_golden_query_2_corrective_path_persists_trace() -> None:
         ),
         web_search_provider=FakeWebSearchProvider(documents=[web_doc]),
         hallucination_checker=FakeHallucinationChecker(is_supported=True),
-        decision_trace_repository=FakeDecisionTraceRepository(),
+        decision_trace_repository=fake_repo,
     )
 
-    graph = build_graph(deps)
-    fake_repo = FakeDecisionTraceRepository()
+    app = CorrectiveRAGApplication(
+        graph=build_graph(deps),
+        repository=deps.decision_trace_repository,
+    )
 
-    result = run_workflow(graph=graph, question=question, repository=fake_repo)
+    result = app.run(question=question)
 
     assert result["answer"].status == AnswerStatus.ANSWERED
     assert len(fake_repo.saved_traces) == 1
@@ -87,8 +94,9 @@ def test_golden_query_2_corrective_path_persists_trace() -> None:
 
 
 def test_golden_query_3_safe_refusal_persists_trace() -> None:
-    """Golden Query 3: Grounding failure leading to safe refusal persists complete trace including refusal."""
+    """Golden Query 3: Grounding failure leading to safe refusal via Application runtime persists complete trace."""
     question = Question(text="Fabricated claim question")
+    fake_repo = FakeDecisionTraceRepository()
 
     deps = WorkflowDependencies(
         retriever=FakeRetriever(documents=[]),
@@ -104,13 +112,15 @@ def test_golden_query_3_safe_refusal_persists_trace() -> None:
             documents=[Document(content="Search result", source="web")]
         ),
         hallucination_checker=FakeHallucinationChecker(is_supported=False),
-        decision_trace_repository=FakeDecisionTraceRepository(),
+        decision_trace_repository=fake_repo,
     )
 
-    graph = build_graph(deps)
-    fake_repo = FakeDecisionTraceRepository()
+    app = CorrectiveRAGApplication(
+        graph=build_graph(deps),
+        repository=deps.decision_trace_repository,
+    )
 
-    result = run_workflow(graph=graph, question=question, repository=fake_repo)
+    result = app.run(question=question)
 
     assert result["answer"].status == AnswerStatus.UNSUPPORTED
     assert len(fake_repo.saved_traces) == 1
@@ -139,6 +149,7 @@ def test_persistence_failure_raises_operational_exception() -> None:
     """Verifies that persistence failure raises operational exception and is not swallowed."""
     question = Question(text="Simple test question")
     doc = Document(content="Valid content", source="k8s.md")
+    broken_repo = BrokenTraceRepository()
 
     deps = WorkflowDependencies(
         retriever=FakeRetriever(documents=[doc]),
@@ -147,11 +158,13 @@ def test_persistence_failure_raises_operational_exception() -> None:
         generator=FakeGenerator(answer=Answer(text="Valid answer", status=AnswerStatus.ANSWERED)),
         web_search_provider=FakeWebSearchProvider(),
         hallucination_checker=FakeHallucinationChecker(is_supported=True),
-        decision_trace_repository=FakeDecisionTraceRepository(),
+        decision_trace_repository=broken_repo,  # type: ignore[arg-type]
     )
 
-    graph = build_graph(deps)
-    broken_repo = BrokenTraceRepository()
+    app = CorrectiveRAGApplication(
+        graph=build_graph(deps),
+        repository=deps.decision_trace_repository,
+    )
 
     with pytest.raises(RuntimeError, match="Database connection failure during save"):
-        run_workflow(graph=graph, question=question, repository=broken_repo)  # type: ignore[arg-type]
+        app.run(question=question)

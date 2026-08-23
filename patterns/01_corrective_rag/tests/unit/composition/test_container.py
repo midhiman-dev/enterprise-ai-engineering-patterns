@@ -6,6 +6,7 @@ import chromadb
 from langgraph.graph.state import CompiledStateGraph
 import pytest
 
+from corrective_rag.application.application import CorrectiveRAGApplication
 from corrective_rag.application.workflow_dependencies import WorkflowDependencies
 from corrective_rag.composition.container import build_application, build_dependencies
 from corrective_rag.composition.settings import ApplicationSettings
@@ -156,23 +157,28 @@ def test_build_dependencies_supports_decision_trace_repository_override(
 
 
 
-def test_build_application_produces_compiled_graph(
+def test_build_application_produces_application_bundle(
     mock_groq_config: GroqConfig,
     mock_tavily_config: TavilyConfig,
     mock_groq_client: GroqChatClient,
     mock_tavily_client: TavilySearchClient,
     mock_chroma_collection: chromadb.Collection,
 ) -> None:
-    """Verifies build_application compiles and returns a valid CompiledStateGraph instance."""
+    """Verifies build_application returns a CorrectiveRAGApplication bundling graph and repository."""
+    fake_repo = FakeDecisionTraceRepository()
     app = build_application(
         groq_config=mock_groq_config,
         tavily_config=mock_tavily_config,
         groq_client=mock_groq_client,
         tavily_client=mock_tavily_client,
         chroma_collection=mock_chroma_collection,
+        decision_trace_repository=fake_repo,
     )
 
-    assert isinstance(app, CompiledStateGraph)
+    assert isinstance(app, CorrectiveRAGApplication)
+    assert isinstance(app.graph, CompiledStateGraph)
+    assert app.repository is fake_repo
+
 
 
 def test_missing_groq_api_key_fails_fast(

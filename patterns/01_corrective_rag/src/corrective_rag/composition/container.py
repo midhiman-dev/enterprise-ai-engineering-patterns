@@ -9,6 +9,7 @@ from typing import Any
 import chromadb
 from langgraph.graph.state import CompiledStateGraph
 
+from corrective_rag.application.application import CorrectiveRAGApplication
 from corrective_rag.application.workflow import build_graph
 from corrective_rag.application.workflow_dependencies import WorkflowDependencies
 from corrective_rag.composition.settings import (
@@ -136,8 +137,8 @@ def build_application(
     tavily_client: TavilySearchClient | None = None,
     chroma_collection: Any | None = None,
     decision_trace_repository: DecisionTraceRepository | None = None,
-) -> CompiledStateGraph:
-    """Builds and compiles the Corrective RAG LangGraph workflow.
+) -> CorrectiveRAGApplication:
+    """Builds, compiles, and packages the Corrective RAG application runtime.
 
     Args:
         settings: Optional composition settings.
@@ -150,7 +151,7 @@ def build_application(
         decision_trace_repository: Optional decision trace repository override.
 
     Returns:
-        CompiledStateGraph application ready for state execution.
+        CorrectiveRAGApplication runtime boundary bundling compiled state graph and decision trace repository.
     """
     if dependencies is None:
         dependencies = build_dependencies(
@@ -163,4 +164,8 @@ def build_application(
             decision_trace_repository=decision_trace_repository,
         )
 
-    return build_graph(dependencies)
+    graph = build_graph(dependencies)
+    return CorrectiveRAGApplication(
+        graph=graph,
+        repository=dependencies.decision_trace_repository,
+    )
