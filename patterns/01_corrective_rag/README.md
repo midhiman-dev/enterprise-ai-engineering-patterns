@@ -1,6 +1,6 @@
 # Use Case 01 — Corrective RAG for Kubernetes Troubleshooting
 
-> **Current Status:** 🟢 **Pass-12 — Composition Root and Real Adapter Wiring Implemented.** Composition Root (`src/corrective_rag/composition/`), application settings (`ApplicationSettings`, `load_application_settings_from_env`), container assembly (`build_dependencies`, `build_application`), offline unit tests, and ADR-008 are fully implemented and verified. All six real capability adapters (`ChromaRetriever`, `GroqGenerator`, `GroqRelevanceGrader`, `GroqQueryRewriter`, `TavilyWebSearchProvider`, `GroqHallucinationChecker`) are now wired into `WorkflowDependencies` and compiled into the LangGraph application.
+> **Current Status:** 🟢 **Pass-14 — FastAPI HTTP Interface Implemented.** Thin FastAPI HTTP interface boundary (`src/corrective_rag/api/`), DTO models (`QuestionRequest`, `QuestionResponse`, `HealthResponse`), route handlers (`POST /questions`, `GET /health`), explicit application factory (`create_api`), offline unit tests (`tests/unit/api/test_api.py`), and ADR-010 are fully implemented and verified.
 
 
 ---
@@ -49,30 +49,59 @@ The graph will be evaluated against three golden acceptance scenarios with expec
 ```text
 UI (React / TypeScript)
   ↓
-API (FastAPI DTOs & Endpoints)
+API (FastAPI DTOs & Endpoints in src/corrective_rag/api/)
   ↓
-Application (AnswerQuestionUseCase & LangGraph Orchestration)
+Application (CorrectiveRAGApplication & LangGraph Orchestration)
   ↓
 Domain (Pure Python Entities & Ports)
   ↑
-Infrastructure (Chroma, Groq, Tavily, Persistence Adapters)
+Infrastructure (Chroma, Groq, Tavily, SQLite Persistence Adapters)
 ```
 
 * **Domain**: Pure Python entities (`Question`, `Document`, `GradedDocument`, `Answer`, `DecisionTrace`) and ports (`Retriever`, `RelevanceGrader`, `QueryRewriter`, `Generator`, `WebSearchProvider`, `HallucinationChecker`, `DecisionTraceRepository`). Zero third-party SDK dependencies.
-* **Application**: Houses the LangGraph workflow. Graph nodes invoke Domain ports.
+* **Application**: Houses the LangGraph workflow (`CorrectiveRAGApplication`). Graph nodes invoke Domain ports.
 * **Infrastructure**: Implements Domain ports using concrete vendor SDKs.
-* **Composition**: Assembles concrete Infrastructure adapters into `WorkflowDependencies` and compiles the application graph.
+* **Composition**: Assembles concrete Infrastructure adapters into `WorkflowDependencies` and compiles `CorrectiveRAGApplication`.
+* **API**: Exposes HTTP endpoints (`create_api()`) delegating to `CorrectiveRAGApplication.run(question)`.
 
 ---
 
-## Intended Technology Stack (Future Passes)
+## HTTP API Endpoints
 
-* **Orchestration:** LangGraph / LangChain
-* **Vector Store:** Chroma
-* **LLM Provider:** Groq
-* **Web Search:** Tavily
-* **API:** FastAPI
-* **UI:** React
+### 1. Process Liveness Health Check
+* **Method & Path:** `GET /health`
+* **Response:** `{"status": "ok"}`
+* **Behavior:** Process-level liveness probe. Does not execute downstream database, vector, or LLM queries.
+
+### 2. Submit Troubleshooting Question
+* **Method & Path:** `POST /questions`
+* **Request JSON:**
+  ```json
+  {
+    "question": "Why does kubectl get pods show CrashLoopBackOff?"
+  }
+  ```
+* **Response JSON:**
+  ```json
+  {
+    "answer": "...",
+    "status": "answered",
+    "is_supported": true,
+    "generation_attempts": 1,
+    "decision_trace": [
+      { "step": "retrieve", "detail": null },
+      { "step": "grade_documents", "detail": null },
+      { "step": "generate", "detail": null },
+      { "step": "hallucination_check", "detail": null }
+    ]
+  }
+  ```
+
+### Minimal Local Execution
+To launch the FastAPI development server locally:
+```bash
+python -m uvicorn corrective_rag.api.app:create_api --factory --reload
+```
 
 ---
 
@@ -88,8 +117,9 @@ Infrastructure (Chroma, Groq, Tavily, Persistence Adapters)
   * [ADR-006: Tavily Web Search for Corrective Retrieval](docs/adrs/ADR-006-tavily-web-search-for-corrective-retrieval.md)
   * [ADR-007: Evidence Grounding Verification for Generated Answers](docs/adrs/ADR-007-evidence-grounding-verification.md)
   * [ADR-008: Composition Root and Real Adapter Runtime Wiring](docs/adrs/ADR-008-composition-root-and-runtime-wiring.md)
+  * [ADR-009: SQLite Persistence for DecisionTrace Audit Records](docs/adrs/ADR-009-sqlite-decision-trace-persistence.md)
+  * [ADR-010: FastAPI HTTP Interface Boundary](docs/adrs/ADR-010-fastapi-http-interface.md)
 
 
 * [Step-by-Step Tutorial](docs/tutorial/README.md)
-* [Learner Assignment — Apply Corrective RAG to a Different Enterprise Support Problem](docs/assignment/ASSIGNMENT.md)
-* [Interview Guide (Placeholder)](docs/interview-guide/README.md)
+* [Interview Guide](docs/interview-guide/README.md)

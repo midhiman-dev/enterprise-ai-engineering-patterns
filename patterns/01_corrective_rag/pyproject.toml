@@ -13,6 +13,8 @@ dependencies = [
     "chromadb",
     "groq",
     "tavily-python",
+    "fastapi",
+    "uvicorn",
 ]
 
 [tool.setuptools.packages.find]
@@ -21,6 +23,7 @@ where = ["src"]
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
+    "httpx",
 ]
 
 [tool.pytest.ini_options]

@@ -1,10 +1,28 @@
 # Use Case 01 — Interview Guide
 
-> **Current Status:** 🟢 **Pass-13 Implemented.** Grounded interview material added for DecisionTrace audit persistence, AI decision traces vs logs, chain-of-thought storage policy, and production storage evolution.
+> **Current Status:** 🟢 **Pass-14 Implemented.** Grounded interview material added for FastAPI HTTP interface boundary, thin controllers, transport DTO vs domain entity separation, safe refusal HTTP 200 semantics, liveness probes, and production evidence status.
 
 ## Overview
 
 This guide prepares AI engineers and system designers to discuss Corrective RAG (CRAG) architecture, trade-offs, failure modes, auditability, and production scaling in technical interviews.
+
+---
+
+## Pass-14 — Evidence Status & API Interface
+
+### System Evidence Status Summary
+
+| Capability / Feature | Status | Notes |
+| :--- | :--- | :--- |
+| **FastAPI HTTP Interface** | Implemented + Tested | `create_api()`, `POST /questions`, `GET /health` |
+| **Pydantic DTO Validation** | Implemented + Tested | `QuestionRequest` rejecting blank/whitespace queries |
+| **Inline DecisionTrace Response** | Implemented + Tested | Returned inline in `QuestionResponse` |
+| **Safe Refusal (HTTP 200)** | Implemented + Tested | Mapped to `status = "unsupported"` |
+| **Operational Error Boundary (HTTP 500)** | Implemented + Tested | Generic 500 response hiding raw secrets/exceptions |
+| **Horizontal Autoscaling** | Design-only | Not implemented |
+| **PostgreSQL Persistence** | Design-only | Not implemented |
+| **Authentication & Authorization** | Design-only | Not implemented |
+| **Token / Event Streaming** | Design-only | Not implemented |
 
 ---
 

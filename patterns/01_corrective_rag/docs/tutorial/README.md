@@ -1,6 +1,6 @@
 # Use Case 01 — Step-by-Step Tutorial
 
-> **Current Status:** 🟢 **Pass-13 Implemented.** SQLite DecisionTrace Persistence (`src/corrective_rag/infrastructure/persistence/sqlite_decision_trace_repository.py`), `run_workflow` application use case, `CRAG_TRACE_DB_PATH` composition settings (`ApplicationSettings`), offline unit/integration tests, ADR-009, and tutorial documentation are complete and verified.
+> **Current Status:** 🟢 **Pass-14 Implemented.** FastAPI HTTP Interface (`src/corrective_rag/api/`), DTO models (`models.py`), route handlers (`routes.py`), application factory (`create_api`), offline unit tests, ADR-010, and tutorial documentation are complete and verified.
 
 
 ## Overview
@@ -31,8 +31,10 @@ The tutorial follows a deliberate learning sequence designed to isolate framewor
 14. **Groq Hallucination Checker** — Concrete implementation of `HallucinationChecker` (`GroqHallucinationChecker`). (Implemented)
 15. **Composition Root** — Assembling graph orchestration with concrete adapters. (Implemented)
 16. **Decision Trace Persistence** — SQLite storage implementation of `DecisionTraceRepository` (`SQLiteDecisionTraceRepository`). (Implemented)
-
-17. **FastAPI / Interface** — Exposing HTTP/SSE endpoints for query processing and decision trace inspection.
+17. **FastAPI / Interface** — Exposing HTTP endpoints for question processing and liveness inspection (`src/corrective_rag/api/`). (Implemented)
+18. **Integration & Golden Acceptance Tests** — Running golden queries against full adapter stack.
+19. **Decision Trace Inspection** — Auditing system decisions across local vs. web fallback routes.
+20. **Production Evolution & Interview Lessons** — System design trade-offs and scaling strategies.
 18. **Integration & Golden Acceptance Tests** — Running golden queries against full adapter stack.
 19. **Decision Trace Inspection** — Auditing system decisions across local vs. web fallback routes.
 20. **Production Evolution & Interview Lessons** — System design trade-offs and scaling strategies.
@@ -744,6 +746,165 @@ def build_application(
 > **Interview Question:** Why not expose SQLite's trace ID directly?
 
 **Answer:** Database identity and application identity are distinct concepts. An application-level execution/correlation ID must be designed around external API, tracing, and multi-tenant requirements (e.g. UUID, correlation headers, stability across database migrations). The database's internal auto-increment integer primary key is an Infrastructure detail. Exposing database row IDs directly into Domain entities leaks storage implementation details.
+
+---
+
+## Pass-14 Learning Outline — Exposing the Corrective RAG Workflow Through FastAPI
+
+Pass-14 demonstrates how to build an HTTP transport interface boundary over the compiled `CorrectiveRAGApplication` using FastAPI.
+
+```text
+HTTP Request
+    ↓
+Pydantic DTO (QuestionRequest)
+    ↓
+FastAPI Route (ask_question)
+    ↓
+Domain Question Entity
+    ↓
+CorrectiveRAGApplication.run(...)
+    ↓
+LangGraph Workflow Execution
+    ↓
+Domain Answer + DecisionTrace
+    ↓
+Response DTO (QuestionResponse)
+```
+
+### Verified Implementation Code
+
+#### 1. Transport DTO Models (`src/corrective_rag/api/models.py`)
+
+```python
+class QuestionRequest(BaseModel):
+    question: str
+
+    @field_validator("question")
+    @classmethod
+    def validate_question(cls, value: str) -> str:
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("Question text cannot be empty or whitespace-only.")
+        return value
+
+
+class DecisionTraceStepResponse(BaseModel):
+    step: str
+    detail: str | None = None
+
+
+class QuestionResponse(BaseModel):
+    answer: str
+    status: str
+    is_supported: bool
+    generation_attempts: int
+    decision_trace: list[DecisionTraceStepResponse]
+```
+
+#### 2. Route Handlers (`src/corrective_rag/api/routes.py`)
+
+```python
+@router.get("/health", response_model=HealthResponse, status_code=status.HTTP_200_OK)
+def health_check() -> HealthResponse:
+    return HealthResponse(status="ok")
+
+
+@router.post("/questions", response_model=QuestionResponse, status_code=status.HTTP_200_OK)
+def ask_question(
+    request_dto: QuestionRequest,
+    application: CorrectiveRAGApplication = Depends(get_application),
+) -> QuestionResponse:
+    domain_question = Question(text=request_dto.question)
+
+    try:
+        final_state = application.run(domain_question)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An internal error occurred while processing the question.",
+        ) from exc
+
+    final_answer = final_state.get("answer")
+    if final_answer is not None:
+        answer_text = final_answer.text
+        answer_status_str = final_answer.status.value
+    else:
+        answer_text = "No answer generated."
+        answer_status_str = AnswerStatus.UNSUPPORTED.value
+
+    raw_supported = final_state.get("is_supported")
+    is_supported_bool = bool(raw_supported) if raw_supported is not None else False
+    generation_attempts = final_state.get("generation_attempts", 0)
+
+    trace_obj = final_state.get("trace")
+    decision_trace_dtos = (
+        [DecisionTraceStepResponse(step=s.name, detail=s.detail) for s in trace_obj.steps]
+        if trace_obj is not None
+        else []
+    )
+
+    return QuestionResponse(
+        answer=answer_text,
+        status=answer_status_str,
+        is_supported=is_supported_bool,
+        generation_attempts=generation_attempts,
+        decision_trace=decision_trace_dtos,
+    )
+```
+
+#### 3. Application Factory (`src/corrective_rag/api/app.py`)
+
+```python
+def create_api(
+    application: CorrectiveRAGApplication | None = None,
+) -> FastAPI:
+    if application is None:
+        application = build_application()
+
+    app = FastAPI(
+        title="Corrective RAG API",
+        description="HTTP API interface for Corrective RAG Kubernetes troubleshooting workflow.",
+        version="0.1.0",
+    )
+
+    app.state.application = application
+    app.include_router(router)
+
+    return app
+```
+
+---
+
+## Interview Guide — FastAPI & API Layer Boundaries
+
+> **Interview Question:** Why shouldn't FastAPI routes call the LLM or vector store directly?
+
+**Answer:** Because HTTP transport and AI capability orchestration have completely separate responsibilities. Keeping the API route thin ensures the exact same `CorrectiveRAGApplication` runtime can be driven by CLI commands, web APIs, unit tests, or background workers without duplicating workflow orchestration, dependency construction, or trace persistence logic.
+
+> **Interview Question:** Why not return `GraphState` directly from the route handler?
+
+**Answer:** `GraphState` is an internal application layer dictionary tracking transient orchestration state (intermediate documents, search reformulations, internal graph counters). Returning `GraphState` directly exposes internal application details to external API clients, coupling API contracts to internal graph state structure.
+
+> **Interview Question:** Why is safe refusal returned as HTTP 200 instead of HTTP 400 or HTTP 500?
+
+**Answer:** Safe refusal occurs when available evidence is insufficient or ungrounded (`AnswerStatus.UNSUPPORTED`). This is a valid application business outcome—a successful evaluation that the system cannot answer safely. HTTP status codes represent transport/server protocol status (200 OK vs 500 Error), whereas `status: "unsupported"` represents domain-level evidence grading.
+
+> **Interview Question:** Why isn't `GET /health` a readiness check?
+
+**Answer:** `GET /health` is strictly a process-level liveness check. It verifies that the Python web server process is alive and responding. Probing downstream vector databases, SQLite databases, or external API endpoints inside `/health` makes health checks expensive, slow, and prone to cascading failures.
+
+> **Interview Question:** Should FastAPI endpoints for AI applications always be `async`?
+
+**Answer:** No. Endpoints should match the underlying execution model. In this codebase, the LangGraph workflow and provider client calls operate synchronously. Marking route handlers as `async def` without asynchronous IO clients can lead to thread pool exhaustion under heavy load. Synchronous `def` handlers allow FastAPI/Starlette to handle request threading safely in a worker thread pool.
+
+> **Interview Question:** How would you scale this API horizontally across multiple nodes?
+
+**Answer (Current vs. Design-Only):**
+* **Current Implementation:** The API service uses single-file SQLite (`SQLiteDecisionTraceRepository`) and single-node in-memory application wiring.
+* **Design-Only Production Scaling:**
+  1. Keep FastAPI application instances stateless behind a load balancer.
+  2. Replace single-file `SQLiteDecisionTraceRepository` with `PostgresDecisionTraceRepository` implementing the same `DecisionTraceRepository` Domain port.
+  3. Deploy a distributed vector database (e.g. Qdrant / Pgvector) and shared Groq/Tavily client connections.
+  *Note: Distributed PostgreSQL persistence and container horizontal scaling have not been implemented in Pass-14.*
 
 ---
 

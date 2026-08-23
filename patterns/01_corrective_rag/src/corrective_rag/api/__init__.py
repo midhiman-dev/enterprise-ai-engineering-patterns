@@ -1,5 +1,5 @@
-"""API Layer.
+"""FastAPI HTTP interface package for Corrective RAG."""
 
-Will contain API entry points (e.g., FastAPI routes, DTO request/response schemas, error handling, SSE streaming).
-Communicates only with Application use cases.
-"""
+from corrective_rag.api.app import create_api
+
+__all__ = ["create_api"]
