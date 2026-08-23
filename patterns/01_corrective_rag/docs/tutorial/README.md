@@ -632,6 +632,7 @@ def build_dependencies(
     tavily_client: TavilySearchClient | None = None,
     chroma_collection: Any | None = None,
 ) -> WorkflowDependencies:
+    load_local_environment()
     settings = settings or load_application_settings_from_env()
     groq_config = groq_config or load_groq_config_from_env()
     tavily_config = tavily_config or load_tavily_config_from_env()
@@ -723,9 +724,35 @@ def build_application(
 3. **Graph vs. Runtime Ownership**: `WorkflowDependencies` contains only dependencies required by LangGraph nodes. Trace persistence is an application-runtime concern owned by `CorrectiveRAGApplication`.
 4. **Fail-Fast Startup**: Configuration validation happens synchronously during startup, preventing partial runtime execution with missing credentials.
 
+### Local Secrets Without Coupling Providers to `.env`
+
+In Clean Architecture, provider configuration classes (`GroqConfig`, `TavilyConfig`, `ApplicationSettings`) read exclusively from standard process environment variables (`os.getenv`).
+
+Environment loading via `.env` files is an **outer bootstrap concern** managed by `load_local_environment()` in `src/corrective_rag/composition/environment.py`.
+
+```text
+local .env file
+      ↓
+load_local_environment() (composition bootstrap)
+      ↓
+os.environ (process environment)
+      ↓
+load_groq_config_from_env() / load_tavily_config_from_env()
+      ↓
+GroqConfig / TavilyConfig immutable instances
+```
+
+Why decouple `.env` loading from provider adapters?
+1. **Infrastructure Decoupling:** Provider adapters remain 100% agnostic of how environment variables were set (e.g. Docker env, Kubernetes secrets, CI env, or developer `.env`).
+2. **Precedence Enforcement:** Standard process/shell environment variables override `.env` values (`override=False`), ensuring production deployments are never accidentally overridden by developer `.env` files.
+
 ---
 
 ## Interview Guide — Composition Root & Dependency Inversion
+
+> **Interview Question:** Where should environment configuration (`.env`) be loaded in Clean Architecture?
+
+**Answer:** At the outer composition/bootstrap boundary, not inside Domain or Infrastructure provider adapters. Provider configuration classes should read strictly from standard process environment variables (`os.getenv`), while the outer composition root populates the process environment at application startup. This keeps provider adapters decoupled from file system dependencies and ensures deployment secrets take precedence.
 
 > **Interview Question:** If your Application layer cannot import Chroma or Groq, where do you instantiate them?
 

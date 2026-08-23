@@ -11,6 +11,7 @@ import chromadb
 from corrective_rag.application.application import CorrectiveRAGApplication
 from corrective_rag.application.workflow import build_graph
 from corrective_rag.application.workflow_dependencies import WorkflowDependencies
+from corrective_rag.composition.environment import load_local_environment
 from corrective_rag.composition.settings import (
     ApplicationSettings,
     load_application_settings_from_env,
@@ -68,6 +69,7 @@ def build_dependencies(
     Raises:
         ValueError: If required environment configurations are missing or invalid.
     """
+    load_local_environment()
     settings = settings or load_application_settings_from_env()
     groq_config = groq_config or load_groq_config_from_env()
     tavily_config = tavily_config or load_tavily_config_from_env()
@@ -146,6 +148,7 @@ def build_application(
     Returns:
         CorrectiveRAGApplication runtime boundary bundling compiled state graph and decision trace repository.
     """
+    load_local_environment()
     settings = settings or load_application_settings_from_env()
 
     if dependencies is None:

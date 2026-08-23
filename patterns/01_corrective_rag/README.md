@@ -97,7 +97,30 @@ Infrastructure (Chroma, Groq, Tavily, SQLite Persistence Adapters)
   }
   ```
 
-### Minimal Local Execution
+---
+
+## Developer Local Environment Setup
+
+Copy `.env.example` to create your developer-local `.env` file:
+
+```powershell
+# Windows PowerShell
+Copy-Item .env.example .env
+```
+
+```bash
+# Linux / macOS bash
+cp .env.example .env
+```
+
+Configure your credentials inside `.env`:
+```ini
+GROQ_API_KEY=your_real_groq_api_key
+TAVILY_API_KEY=your_real_tavily_api_key
+```
+
+> **Note:** `.env` is ignored by Git and will never be committed. Deployment and process environment variables always take precedence over `.env` settings (`override=False`).
+
 To launch the FastAPI development server locally:
 ```bash
 python -m uvicorn corrective_rag.api.app:create_api --factory --reload
@@ -119,7 +142,6 @@ python -m uvicorn corrective_rag.api.app:create_api --factory --reload
   * [ADR-008: Composition Root and Real Adapter Runtime Wiring](docs/adrs/ADR-008-composition-root-and-runtime-wiring.md)
   * [ADR-009: SQLite Persistence for DecisionTrace Audit Records](docs/adrs/ADR-009-sqlite-decision-trace-persistence.md)
   * [ADR-010: FastAPI HTTP Interface Boundary](docs/adrs/ADR-010-fastapi-http-interface.md)
-
 
 * [Step-by-Step Tutorial](docs/tutorial/README.md)
 * [Interview Guide](docs/interview-guide/README.md)

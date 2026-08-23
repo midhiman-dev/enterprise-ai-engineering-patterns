@@ -68,6 +68,15 @@ Environment variable resolution occurs strictly during startup inside configurat
 * If required API keys (`GROQ_API_KEY`, `TAVILY_API_KEY`) or invalid composition settings (`retriever_top_k <= 0`) are encountered, composition **fails fast** with an explicit exception during startup.
 * Production composition never falls back to test doubles or placeholder keys.
 
+### Local Development Environment Loading (`.env`)
+
+To facilitate developer-local execution, an outer bootstrap function `load_local_environment()` in `src/corrective_rag/composition/environment.py` populates `os.environ` from a developer-local `.env` file prior to resolving provider configurations:
+
+* **Decoupled Provider Configs:** `GroqConfig`, `TavilyConfig`, and `ApplicationSettings` continue reading strictly from `os.getenv(...)`. They do not import `python-dotenv` or open `.env` files directly.
+* **Precedence Order:** Process/shell environment variables override local `.env` settings (`override=False`). Precedence follows: `deployment / shell environment > local .env > application default`.
+* **Missing `.env` Handling:** A missing `.env` file is handled gracefully without errors, allowing standard containerized or production shell configurations to proceed seamlessly.
+
+
 
 ---
 

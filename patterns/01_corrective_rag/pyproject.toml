@@ -15,6 +15,7 @@ dependencies = [
     "tavily-python",
     "fastapi",
     "uvicorn",
+    "python-dotenv",
 ]
 
 [tool.setuptools.packages.find]
