@@ -14,3 +14,4 @@ This directory captures architectural decisions for Use Case 01 (Corrective RAG 
 * [ADR-008: Composition Root and Real Adapter Runtime Wiring](ADR-008-composition-root-and-runtime-wiring.md) — *Accepted*
 * [ADR-009: SQLite Persistence for DecisionTrace Audit Records](ADR-009-sqlite-decision-trace-persistence.md) — *Accepted*
 * [ADR-010: FastAPI HTTP Interface Boundary](ADR-010-fastapi-http-interface.md) — *Accepted*
+* [ADR-011: Frozen Kubernetes v1.31 Knowledge Snapshot for Corrective RAG](ADR-011-frozen-kubernetes-knowledge-snapshot.md) — *Accepted*

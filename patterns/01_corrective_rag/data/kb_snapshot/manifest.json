@@ -1,0 +1,292 @@
+{
+  "corpus_name": "kubernetes-troubleshooting-v1.31",
+  "source_repository": "https://github.com/kubernetes/website",
+  "source_tag": "snapshot-initial-v1.31",
+  "source_commit": "20d164c7a7d092ebc65eed06c855d2ec4f0f0e12",
+  "kubernetes_version": "1.31",
+  "document_count": 35,
+  "snapshot_purpose": "deliberately stale local KB for Corrective RAG",
+  "license": "CC-BY-4.0",
+  "documents": [
+    {
+      "local_path": "documents/assign-cpu-resource.md",
+      "upstream_path": "content/en/docs/tasks/configure-pod-container/assign-cpu-resource.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/configure-pod-container/assign-cpu-resource.md",
+      "title": "Assign CPU Resources to Containers and Pods",
+      "category": "Pod & Container Configuration",
+      "sha256": "137111ebae8fe8df1990182b646baebf34919459416972921790678c10683f75"
+    },
+    {
+      "local_path": "documents/assign-memory-resource.md",
+      "upstream_path": "content/en/docs/tasks/configure-pod-container/assign-memory-resource.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/configure-pod-container/assign-memory-resource.md",
+      "title": "Assign Memory Resources to Containers and Pods",
+      "category": "Pod & Container Configuration",
+      "sha256": "ba495d917f7360be2a0f32b527d7ed60a8b8927396886085f8f146eef0300e14"
+    },
+    {
+      "local_path": "documents/cluster-ip-allocation.md",
+      "upstream_path": "content/en/docs/concepts/services-networking/cluster-ip-allocation.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/concepts/services-networking/cluster-ip-allocation.md",
+      "title": "Service ClusterIP allocation",
+      "category": "Services & Networking",
+      "sha256": "2f3a66d83e56605dae511bb328454f39c9acbcb582d32bce9f938809a30e0a10"
+    },
+    {
+      "local_path": "documents/configmap.md",
+      "upstream_path": "content/en/docs/concepts/configuration/configmap.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/concepts/configuration/configmap.md",
+      "title": "ConfigMaps",
+      "category": "Configuration & Secrets",
+      "sha256": "0d50662e6d0908f14cd484e58695b91879ab64d4a50e7f7e50c2544903f2f0a2"
+    },
+    {
+      "local_path": "documents/configure-liveness-readiness-startup-probes.md",
+      "upstream_path": "content/en/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes.md",
+      "title": "Configure Liveness, Readiness and Startup Probes",
+      "category": "Pod & Container Configuration",
+      "sha256": "c4ae8157262447a445a0220ef525fc73026e6514c43cb0e69f859250dc61ae28"
+    },
+    {
+      "local_path": "documents/configure-pod-configmap.md",
+      "upstream_path": "content/en/docs/tasks/configure-pod-container/configure-pod-configmap.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/configure-pod-container/configure-pod-configmap.md",
+      "title": "Configure a Pod to Use a ConfigMap",
+      "category": "Pod & Container Configuration",
+      "sha256": "a9dea143caa857d39d6c2097867dfb9b90db70d2d426f2ab499375a327e456b3"
+    },
+    {
+      "local_path": "documents/cron-jobs.md",
+      "upstream_path": "content/en/docs/concepts/workloads/controllers/cron-jobs.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/concepts/workloads/controllers/cron-jobs.md",
+      "title": "CronJob",
+      "category": "Workloads & Controllers",
+      "sha256": "1ee493f37d11c5e4fb89f0e00577d7c5872c9a3a3597eb09d10e6a84d64ac7bc"
+    },
+    {
+      "local_path": "documents/debug-init-containers.md",
+      "upstream_path": "content/en/docs/tasks/debug/debug-application/debug-init-containers.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/debug/debug-application/debug-init-containers.md",
+      "title": "Debug Init Containers",
+      "category": "Application Debugging",
+      "sha256": "76f7435ce35904872363fdd2b58252c74c72db072170cdb8829a93fa00edd672"
+    },
+    {
+      "local_path": "documents/debug-pods.md",
+      "upstream_path": "content/en/docs/tasks/debug/debug-application/debug-pods.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/debug/debug-application/debug-pods.md",
+      "title": "Debug Pods",
+      "category": "Application Debugging",
+      "sha256": "2a9202d3b2742465191b0c4c3f105f51367552f60a90c62e995899e627358fe6"
+    },
+    {
+      "local_path": "documents/debug-running-pod.md",
+      "upstream_path": "content/en/docs/tasks/debug/debug-application/debug-running-pod.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/debug/debug-application/debug-running-pod.md",
+      "title": "Debug Running Pods",
+      "category": "Application Debugging",
+      "sha256": "2cb60e7507d8649c8be0476d565425e3aefc6a825eb0c331f3a569bcbfb41312"
+    },
+    {
+      "local_path": "documents/debug-service.md",
+      "upstream_path": "content/en/docs/tasks/debug/debug-application/debug-service.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/debug/debug-application/debug-service.md",
+      "title": "Debug Services",
+      "category": "Application Debugging",
+      "sha256": "7d60eb9a453f1e03dabbf85edfd9887e6048256ea5e432ca55e1f8e57c3ddae1"
+    },
+    {
+      "local_path": "documents/deployment.md",
+      "upstream_path": "content/en/docs/concepts/workloads/controllers/deployment.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/concepts/workloads/controllers/deployment.md",
+      "title": "Deployments",
+      "category": "Workloads & Controllers",
+      "sha256": "3b7897a29d2c4455ea234bc66f1ced09da9b29c08d97a3884cfc26c4ccf9889b"
+    },
+    {
+      "local_path": "documents/determine-reason-pod-failure.md",
+      "upstream_path": "content/en/docs/tasks/debug/debug-application/determine-reason-pod-failure.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/debug/debug-application/determine-reason-pod-failure.md",
+      "title": "Determine the Reason for Pod Failure",
+      "category": "Application Debugging",
+      "sha256": "ecf398ebb0d25792b9a251308d2edfa556a04d561b5a5a25a2ab8e82e28a59fc"
+    },
+    {
+      "local_path": "documents/dns-debugging-resolution.md",
+      "upstream_path": "content/en/docs/tasks/administer-cluster/dns-debugging-resolution.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/administer-cluster/dns-debugging-resolution.md",
+      "title": "Debugging DNS Resolution",
+      "category": "Cluster Administration & Diagnostics",
+      "sha256": "f7e4d13f27113505d5094b9012d502ae60a345431bbeb00f38746c143031d94e"
+    },
+    {
+      "local_path": "documents/dns-pod-service.md",
+      "upstream_path": "content/en/docs/concepts/services-networking/dns-pod-service.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/concepts/services-networking/dns-pod-service.md",
+      "title": "DNS for Services and Pods",
+      "category": "Services & Networking",
+      "sha256": "a918360bd07d32f4fda5e2f840bd510f46d3f8eb24c127047aa2d871dcfeaf6e"
+    },
+    {
+      "local_path": "documents/get-shell-running-container.md",
+      "upstream_path": "content/en/docs/tasks/debug/debug-application/get-shell-running-container.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/debug/debug-application/get-shell-running-container.md",
+      "title": "Get a Shell to a Running Container",
+      "category": "Application Debugging",
+      "sha256": "dd9c53f695c6860b2bd847a9a78486f7f419d0e28572f6f30f2717bd4abc205e"
+    },
+    {
+      "local_path": "documents/init-containers.md",
+      "upstream_path": "content/en/docs/concepts/workloads/pods/init-containers.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/concepts/workloads/pods/init-containers.md",
+      "title": "Init Containers",
+      "category": "Workloads & Pods",
+      "sha256": "cc2b446e746aaf97ad536d745f3cf4aa2d0ba37681e1fcb94c5beb747f7e144e"
+    },
+    {
+      "local_path": "documents/job.md",
+      "upstream_path": "content/en/docs/concepts/workloads/controllers/job.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/concepts/workloads/controllers/job.md",
+      "title": "Jobs",
+      "category": "Workloads & Controllers",
+      "sha256": "e7c2b8aef0406de1083633878d4c7f6bdc97e7d6602b87a99a684f2130707c1c"
+    },
+    {
+      "local_path": "documents/kubectl-node-debug.md",
+      "upstream_path": "content/en/docs/tasks/debug/debug-cluster/kubectl-node-debug.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/debug/debug-cluster/kubectl-node-debug.md",
+      "title": "Debugging Kubernetes Nodes With Kubectl",
+      "category": "Cluster & Node Debugging",
+      "sha256": "9dd6f147e8e88667d4965d3e64472b3e4f72a5f7d3802dab76936e5d8de14c92"
+    },
+    {
+      "local_path": "documents/logging.md",
+      "upstream_path": "content/en/docs/concepts/cluster-administration/logging.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/concepts/cluster-administration/logging.md",
+      "title": "Logging Architecture",
+      "category": "Cluster Administration & Diagnostics",
+      "sha256": "62bc916ab8d5e442c816344298c892d4a32f5badeaa447c5c0e6d144cabb2316"
+    },
+    {
+      "local_path": "documents/monitor-node-health.md",
+      "upstream_path": "content/en/docs/tasks/debug/debug-cluster/monitor-node-health.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/debug/debug-cluster/monitor-node-health.md",
+      "title": "Monitor Node Health",
+      "category": "Cluster & Node Debugging",
+      "sha256": "94b45d11faf747b02ced7c9e5bee9c4250b039b0315d133b49d59cffba029288"
+    },
+    {
+      "local_path": "documents/node-pressure-eviction.md",
+      "upstream_path": "content/en/docs/concepts/scheduling-eviction/node-pressure-eviction.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/concepts/scheduling-eviction/node-pressure-eviction.md",
+      "title": "Node-pressure Eviction",
+      "category": "Scheduling & Eviction",
+      "sha256": "a76f04b2b59d4e5c731889815d1ffc784be9a14f62f79157d4dfe4cf53a9de1e"
+    },
+    {
+      "local_path": "documents/persistent-volumes.md",
+      "upstream_path": "content/en/docs/concepts/storage/persistent-volumes.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/concepts/storage/persistent-volumes.md",
+      "title": "Persistent Volumes",
+      "category": "Storage",
+      "sha256": "50d499da7d6be1d28507cce4b387ce41337dde70e5b78f3016f30b6f3c1114c6"
+    },
+    {
+      "local_path": "documents/pod-lifecycle.md",
+      "upstream_path": "content/en/docs/concepts/workloads/pods/pod-lifecycle.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/concepts/workloads/pods/pod-lifecycle.md",
+      "title": "Pod Lifecycle",
+      "category": "Workloads & Pods",
+      "sha256": "b3046ba5fd1aa83900a74871eae1cb1855743a9a436924c7aec9eeb047d90e60"
+    },
+    {
+      "local_path": "documents/pod-overhead.md",
+      "upstream_path": "content/en/docs/concepts/scheduling-eviction/pod-overhead.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/concepts/scheduling-eviction/pod-overhead.md",
+      "title": "Pod Overhead",
+      "category": "Scheduling & Eviction",
+      "sha256": "1ee43c3549098d7fc2c3581fa24842119bfec825bf44c57b144b4ff6ee8c6f2c"
+    },
+    {
+      "local_path": "documents/pod-priority-preemption.md",
+      "upstream_path": "content/en/docs/concepts/scheduling-eviction/pod-priority-preemption.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/concepts/scheduling-eviction/pod-priority-preemption.md",
+      "title": "Pod Priority and Preemption",
+      "category": "Scheduling & Eviction",
+      "sha256": "46d140b2ec1b4aa8c540cb0f419695a69b8076fd553d202358693dc4be2b313e"
+    },
+    {
+      "local_path": "documents/pull-image-private-registry.md",
+      "upstream_path": "content/en/docs/tasks/configure-pod-container/pull-image-private-registry.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/configure-pod-container/pull-image-private-registry.md",
+      "title": "Pull an Image from a Private Registry",
+      "category": "Pod & Container Configuration",
+      "sha256": "c139a1faa71341b4fbdd0644ac355b26480878a4b2231ca68fd24758dde07ef6"
+    },
+    {
+      "local_path": "documents/quality-service-pod.md",
+      "upstream_path": "content/en/docs/tasks/configure-pod-container/quality-service-pod.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/configure-pod-container/quality-service-pod.md",
+      "title": "Configure Quality of Service for Pods",
+      "category": "Pod & Container Configuration",
+      "sha256": "fb2cb9163b1318362be623b18b3df9b4070022a3da195e69f51335d1c1185430"
+    },
+    {
+      "local_path": "documents/replicaset.md",
+      "upstream_path": "content/en/docs/concepts/workloads/controllers/replicaset.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/concepts/workloads/controllers/replicaset.md",
+      "title": "ReplicaSet",
+      "category": "Workloads & Controllers",
+      "sha256": "f40259f38efee26ca2afa74228a388a954a5d6a79c0e68921b477f5efc57c548"
+    },
+    {
+      "local_path": "documents/reserve-compute-resources.md",
+      "upstream_path": "content/en/docs/tasks/administer-cluster/reserve-compute-resources.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/administer-cluster/reserve-compute-resources.md",
+      "title": "Reserve Compute Resources for System Daemons",
+      "category": "Cluster Administration & Diagnostics",
+      "sha256": "9478a2c53d790dc7c6cec26a71900740ff60008ce430527b3e80ac72a27b0d75"
+    },
+    {
+      "local_path": "documents/safely-drain-node.md",
+      "upstream_path": "content/en/docs/tasks/administer-cluster/safely-drain-node.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/administer-cluster/safely-drain-node.md",
+      "title": "Safely Drain a Node",
+      "category": "Cluster Administration & Diagnostics",
+      "sha256": "92fe4e6c2e3a1abdac2c7303e2351f4d1640e6aca44ff839bac34e5f3c79325b"
+    },
+    {
+      "local_path": "documents/secret.md",
+      "upstream_path": "content/en/docs/concepts/configuration/secret.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/concepts/configuration/secret.md",
+      "title": "Secrets",
+      "category": "Configuration & Secrets",
+      "sha256": "77093e3e94fb364c8c77981114706a7b2cb05203bb5cac68600accbd55ab91e5"
+    },
+    {
+      "local_path": "documents/service.md",
+      "upstream_path": "content/en/docs/concepts/services-networking/service.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/concepts/services-networking/service.md",
+      "title": "Service",
+      "category": "Services & Networking",
+      "sha256": "93c10a9fc1c708d7b3a50a748817b8e5a8d37c54029752dbe850742d0f075153"
+    },
+    {
+      "local_path": "documents/taint-and-toleration.md",
+      "upstream_path": "content/en/docs/concepts/scheduling-eviction/taint-and-toleration.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/concepts/scheduling-eviction/taint-and-toleration.md",
+      "title": "Taints and Tolerations",
+      "category": "Scheduling & Eviction",
+      "sha256": "b70e4a9d91ee44a1e6895a61935e469c00a5ca372ff10d2a1f5576a92b3fa2c4"
+    },
+    {
+      "local_path": "documents/troubleshoot-kubectl.md",
+      "upstream_path": "content/en/docs/tasks/debug/debug-cluster/troubleshoot-kubectl.md",
+      "source_url": "https://raw.githubusercontent.com/kubernetes/website/20d164c7a7d092ebc65eed06c855d2ec4f0f0e12/content/en/docs/tasks/debug/debug-cluster/troubleshoot-kubectl.md",
+      "title": "Troubleshooting kubectl",
+      "category": "Cluster & Node Debugging",
+      "sha256": "a17dd5db91174cc733abac6d8aa6c2a9e173478d5d9773b963a3479f4ab0ce91"
+    }
+  ]
+}

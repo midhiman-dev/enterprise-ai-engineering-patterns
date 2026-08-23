@@ -1,6 +1,6 @@
 # Use Case 01 — Step-by-Step Tutorial
 
-> **Current Status:** 🟢 **Pass-14 Implemented.** FastAPI HTTP Interface (`src/corrective_rag/api/`), DTO models (`models.py`), route handlers (`routes.py`), application factory (`create_api`), offline unit tests, ADR-010, and tutorial documentation are complete and verified.
+> **Current Status:** 🟢 **Pass-15 Implemented.** Frozen Kubernetes v1.31 Knowledge Base snapshot (35 documents), provenance manifest (`manifest.json`), CC BY 4.0 attribution (`ATTRIBUTION.md`), snapshot reproduction script (`scripts/fetch_kubernetes_snapshot.py`), offline snapshot integrity tests (`tests/snapshot/`), ADR-011, and tutorial updates are complete and verified.
 
 
 ## Overview
@@ -935,6 +935,51 @@ malformed / missing state → HTTP 500 Internal Server Error
   2. Replace single-file `SQLiteDecisionTraceRepository` with `PostgresDecisionTraceRepository` implementing the same `DecisionTraceRepository` Domain port.
   3. Deploy a distributed vector database (e.g. Qdrant / Pgvector) and shared Groq/Tavily client connections.
   *Note: Distributed PostgreSQL persistence and container horizontal scaling have not been implemented in Pass-14.*
+
+---
+
+## Pass-15 Learning Outline — Building a Deliberately Stale Knowledge Base
+
+Pass-15 establishes the reproducible local Knowledge Base snapshot required by Corrective RAG.
+
+```text
+canonical upstream repository (kubernetes/website @ snapshot-initial-v1.31)
+      ↓
+fetch script (scripts/fetch_kubernetes_snapshot.py)
+      ↓
+35 curated normalized Markdown documents (data/kb_snapshot/documents/*.md)
+      ↓
+provenance manifest + SHA-256 hashes (data/kb_snapshot/manifest.json)
+      ↓
+DocumentLoader -> Chunker -> DefaultLocalEmbeddingFunction -> Chroma
+```
+
+### Why Controlled Staleness Is Essential
+
+The Corrective RAG pattern cannot be evaluated effectively against a knowledge base that is either dynamically updated or artificially complete:
+1. **Useful Local Knowledge**: The local KB contains 35 real Kubernetes troubleshooting documents covering pods, scheduling, eviction, storage, and networking.
+2. **Controlled Version Cutoff**: By freezing the snapshot at **Kubernetes v1.31**, queries asking about post-cutoff features (e.g. Kubernetes 1.32 features) cannot be answered locally, deterministically triggering the web search fallback path.
+3. **Absence Verification**: Fictional parameter flags (e.g. `--enable-quantum-scheduler`) have zero matches in the corpus, testing evidence grounding and safe refusal routing.
+
+---
+
+## Interview Guide — Frozen Knowledge Base Architecture
+
+> **Interview Question:** Why freeze the documents instead of always fetching the latest live docs?
+
+**Answer:**
+* **For this tutorial & evaluation harness:** Reproducibility and controlled stale-knowledge evaluation. Fetching live web documentation introduces moving-target behavior where test queries pass or fail unpredictably depending on upstream site edits. Controlled staleness guarantees reproducible evaluation of corrective web fallback.
+* **For production enterprise RAG:** In production, automated ingestion pipelines (CDC, change detection) continuously update approved knowledge bases to ensure freshness.
+
+> **Interview Question:** Should vector indexes be committed to Git?
+
+**Answer:**
+No. Source documents (`data/kb_snapshot/documents/*.md`), manifests (`manifest.json`), and attribution (`ATTRIBUTION.md`) are version-controlled source truth. Generated vector index files (`data/chroma/`) depend on the specific embedding model, chunking parameters, and vector DB engine version, and must be generated on-demand during ingestion pipelines.
+
+> **Interview Question:** What happens when the embedding model changes?
+
+**Answer:**
+As established in Pass-6A, changing an embedding model requires re-embedding the source document snapshot into a new versioned vector collection (e.g., `corrective-rag-kb-v2`). Because source documents are version-controlled, re-indexing is fully reproducible.
 
 ---
 

@@ -1,6 +1,6 @@
 # Use Case 01 — Interview Guide
 
-> **Current Status:** 🟢 **Pass-14 Implemented.** Grounded interview material added for FastAPI HTTP interface boundary, thin controllers, transport DTO vs domain entity separation, safe refusal HTTP 200 semantics, liveness probes, and production evidence status.
+> **Current Status:** 🟢 **Pass-15 Implemented.** Grounded interview material added for frozen Kubernetes v1.31 KB snapshot, hash integrity validation, reproducible ingestion, intentional staleness for CRAG testing, and production KB evolution.
 
 ## Overview
 
@@ -8,21 +8,21 @@ This guide prepares AI engineers and system designers to discuss Corrective RAG 
 
 ---
 
-## Pass-14 — Evidence Status & API Interface
+## Pass-15 — Evidence Status & Frozen Knowledge Base
 
 ### System Evidence Status Summary
 
 | Capability / Feature | Status | Notes |
 | :--- | :--- | :--- |
+| **Frozen Real Kubernetes v1.31 Corpus** | Implemented + Tested | 35 curated documents from `kubernetes/website` (`snapshot-initial-v1.31`) |
+| **Snapshot Integrity & Hash Validation** | Implemented + Tested | `manifest.json` SHA-256 validation via `fetch_kubernetes_snapshot.py --verify-only` |
+| **Reproducible Ingestion Script** | Implemented + Tested | `scripts/fetch_kubernetes_snapshot.py` and `scripts/build_kb_index.py` |
 | **FastAPI HTTP Interface** | Implemented + Tested | `create_api()`, `POST /questions`, `GET /health` |
-| **Pydantic DTO Validation** | Implemented + Tested | `QuestionRequest` rejecting blank/whitespace queries |
-| **Inline DecisionTrace Response** | Implemented + Tested | Returned inline in `QuestionResponse` |
-| **Safe Refusal (HTTP 200)** | Implemented + Tested | Mapped to `status = "unsupported"` |
-| **Operational Error Boundary (HTTP 500)** | Implemented + Tested | Generic 500 response hiding raw secrets/exceptions |
-| **Horizontal Autoscaling** | Design-only | Not implemented |
-| **PostgreSQL Persistence** | Design-only | Not implemented |
-| **Authentication & Authorization** | Design-only | Not implemented |
-| **Token / Event Streaming** | Design-only | Not implemented |
+| **SQLite DecisionTrace Persistence** | Implemented + Tested | `SQLiteDecisionTraceRepository` persistent storage |
+| **Corrective Retrieval Evaluation (Golden Queries)** | NOT YET TESTED / Pass-16 | Scheduled for Pass-16 |
+| **100k-Document Scaling** | Design-only | Not implemented |
+| **Incremental CDC Indexing** | Design-only | Not implemented |
+| **Hybrid Lexical Retrieval (BM25 + Vector)** | Design-only | Not implemented |
 
 ---
 

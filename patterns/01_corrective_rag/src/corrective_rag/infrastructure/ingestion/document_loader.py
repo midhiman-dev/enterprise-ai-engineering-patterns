@@ -61,12 +61,18 @@ def load_documents_from_directory(directory_path: str | Path) -> list[SourceDocu
     if not path.is_dir():
         raise NotADirectoryError(f"Path '{directory_path}' is not a directory.")
 
+    target_path = path / "documents" if (path / "documents").is_dir() else path
     documents: list[SourceDocument] = []
     supported_extensions = {".md", ".txt"}
+    excluded_filenames = {"readme.md", "attribution.md", "manifest.json"}
 
     # Sort files for deterministic loading order
-    for file_path in sorted(path.iterdir()):
-        if file_path.is_file() and file_path.suffix.lower() in supported_extensions:
+    for file_path in sorted(target_path.iterdir()):
+        if (
+            file_path.is_file()
+            and file_path.suffix.lower() in supported_extensions
+            and file_path.name.lower() not in excluded_filenames
+        ):
             content = file_path.read_text(encoding="utf-8").strip()
             if not content:
                 continue

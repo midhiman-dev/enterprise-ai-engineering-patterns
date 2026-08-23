@@ -1,6 +1,6 @@
 # Use Case 01 — Corrective RAG for Kubernetes Troubleshooting
 
-> **Current Status:** 🟢 **Pass-14 — FastAPI HTTP Interface Implemented.** Thin FastAPI HTTP interface boundary (`src/corrective_rag/api/`), DTO models (`QuestionRequest`, `QuestionResponse`, `HealthResponse`), route handlers (`POST /questions`, `GET /health`), explicit application factory (`create_api`), offline unit tests (`tests/unit/api/test_api.py`), and ADR-010 are fully implemented and verified.
+> **Current Status:** 🟢 **Pass-15 — Frozen Kubernetes v1.31 Knowledge Base Implemented.** Frozen Kubernetes v1.31 Knowledge Base snapshot (35 curated documents from `kubernetes/website` tag `snapshot-initial-v1.31`, commit `20d164c7a7d092ebc65eed06c855d2ec4f0f0e12`), provenance manifest (`manifest.json`), CC BY 4.0 attribution (`ATTRIBUTION.md`), snapshot reproduction script (`scripts/fetch_kubernetes_snapshot.py`), offline snapshot integrity tests (`tests/snapshot/`), ADR-011, and tutorial/interview updates are complete and verified.
 
 
 ---
