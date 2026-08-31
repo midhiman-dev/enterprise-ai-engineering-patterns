@@ -7,7 +7,7 @@ the Groq hosted generation adapter.
 from dataclasses import dataclass
 import os
 
-DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile"
+DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"
 
 
 @dataclass(frozen=True)

@@ -190,6 +190,7 @@ def test_missing_groq_api_key_fails_fast(
     mock_chroma_collection: chromadb.Collection,
 ) -> None:
     """Verifies build_dependencies fails fast with ValueError when GROQ_API_KEY is missing."""
+    monkeypatch.setattr("corrective_rag.composition.container.load_local_environment", lambda: None)
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
 
     with pytest.raises(ValueError, match="GROQ_API_KEY is required"):
@@ -205,6 +206,7 @@ def test_missing_tavily_api_key_fails_fast(
     mock_chroma_collection: chromadb.Collection,
 ) -> None:
     """Verifies build_dependencies fails fast with ValueError when TAVILY_API_KEY is missing."""
+    monkeypatch.setattr("corrective_rag.composition.container.load_local_environment", lambda: None)
     monkeypatch.delenv("TAVILY_API_KEY", raising=False)
 
     with pytest.raises(ValueError, match="TAVILY_API_KEY is required"):
