@@ -1010,6 +1010,56 @@ As established in Pass-6A, changing an embedding model requires re-embedding the
 
 ---
 
+## Pass-16 Learning Outline — Evaluating Corrective RAG as a System
+
+Pass-16 introduces an opt-in, non-invasive golden-scenario evaluation harness (`scripts/evaluate_golden_scenarios.py`) operating over the compiled production application boundary (`build_application() -> CorrectiveRAGApplication.run(...)`).
+
+### The 3 Testing & Evaluation Layers
+
+Enterprise RAG architectures require three distinct validation layers to balance fast local CI feedback with real-world behavioral verification:
+
+```text
+1. Deterministic Offline Tests (python -m pytest)
+      ↓ Validates node logic, state schema, and routing contracts using mocks
+2. Provider Smoke Tests (python -m pytest tests/live -m live)
+      ↓ Verifies live API credentials, model availability, and SDK wire protocols
+3. Golden Scenario Evaluation (python scripts/evaluate_golden_scenarios.py --live)
+      ↓ Observes assembled system behavior against real vector stores and LLM reasoning
+```
+
+### System Behavioral Evaluation Breakdown
+
+Evaluating an assembled Corrective RAG pipeline requires observing several interconnected behavioral dimensions:
+1. **Retrieval Quality**: Does local vector search return candidates containing facts necessary to answer the query?
+2. **Relevance Grading Quality**: Does the LLM grader accurately filter out non-relevant candidates without discarding subtle evidence?
+3. **Corrective Route Activation**: Does the workflow correctly transition to query rewriting and external web search when local evidence is inadequate (e.g., for post-snapshot queries)?
+4. **Generation Grounding**: Does the generator synthesize an answer backed strictly by available evidence?
+5. **Unsupported-Premise & Refusal Handling**: Does the system trigger safe refusal when given fictional or unverifiable premises instead of inventing facts?
+
+> **Educational Note:** Three golden query scenarios provide qualitative behavioral validation, but they do **NOT** constitute a statistically meaningful quantitative benchmark.
+
+---
+
+### Future Work & Advanced Evaluation Metrics (Design-Only)
+
+In production enterprise RAG systems, system evaluation expands into quantitative metrics and automated evaluation pipelines:
+
+- **Retrieval Metrics**:
+  - **Hit@K / Recall@K**: Proportion of queries where at least one ground-truth relevant chunk appears in the top $K$ retrieved documents.
+  - **Mean Reciprocal Rank (MRR)**: Evaluates how high up the first relevant chunk appears in ranked candidate results.
+  - **Normalized Discounted Cumulative Gain (nDCG)**: Measures ranking quality accounting for graded relevance positioning.
+- **Generation & Grounding Metrics**:
+  - **Faithfulness / Grounding Score**: Percentage of claims in generated text mathematically backed by retrieved context.
+  - **Answer Relevance**: Semantic similarity between the generated answer and the original user question.
+- **Operational Metrics**:
+  - **Cost & Token Analysis**: Total input/output tokens consumed per query path (local vs. corrective web search).
+  - **Latency Percentiles**: P50/P95/P99 execution duration across local vs. corrective routing paths.
+- **Automated LLM-as-a-Judge**: Utilizing stronger judge models (e.g. GPT-4o / Claude 3.5 Sonnet) with strict rubric prompts to grade correctness, noting judge bias and non-determinism limitations.
+
+*Note: These quantitative benchmark metrics are design-only and are not currently measured in Pass-16.*
+
+---
+
 ## Apply the Pattern Yourself
 
 

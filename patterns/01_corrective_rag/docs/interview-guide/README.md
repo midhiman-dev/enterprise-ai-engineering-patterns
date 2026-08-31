@@ -19,12 +19,49 @@ This guide prepares AI engineers and system designers to discuss Corrective RAG 
 | **Reproducible Ingestion Script** | Implemented + Tested | `scripts/fetch_kubernetes_snapshot.py` and `scripts/build_kb_index.py` |
 | **FastAPI HTTP Interface** | Implemented + Tested | `create_api()`, `POST /questions`, `GET /health` |
 | **SQLite DecisionTrace Persistence** | Implemented + Tested | `SQLiteDecisionTraceRepository` persistent storage |
-| **Corrective Retrieval Evaluation (Golden Queries)** | NOT YET TESTED / Pass-16 | Scheduled for Pass-16 |
+| **Corrective Retrieval Evaluation (Golden Queries)** | Implemented + Tested | Live golden scenario evaluation harness (`evaluate_golden_scenarios.py --live`) |
 | **100k-Document Scaling** | Design-only | Not implemented |
 | **Incremental CDC Indexing** | Design-only | Not implemented |
 | **Hybrid Lexical Retrieval (BM25 + Vector)** | Design-only | Not implemented |
 
 ---
+
+## Pass-16 — System Evaluation & Testing Beyond Unit Tests
+
+### Q1: "How do you test a RAG system beyond unit tests?"
+**Answer:**
+Testing enterprise RAG systems requires a progressive multi-layer testing strategy:
+
+```text
+Unit & Contract Tests (Mocks/Fakes)
+        ↓
+Retriever & Persistence Integration Tests (Local DBs)
+        ↓
+Provider Integration Smoke Tests (Live External APIs)
+        ↓
+Golden Query Behavioral Evaluation (Assembled System)
+        ↓
+Larger Offline Evaluation Datasets & Production Telemetry (Design-Only)
+```
+
+1. **Unit & State Machine Tests**: Fast, offline tests using handwritten fakes to verify state schema transitions, node handlers, and conditional graph routing without external network calls.
+2. **Infrastructure Integration Tests**: Testing local vector store retrieval (`ChromaRetriever`) and trace persistence (`SQLiteDecisionTraceRepository`) against real local databases.
+3. **Live Provider Smoke Tests**: Opt-in live tests (`pytest -m live`) verifying real third-party API credentials, wire protocol parsing, and SDK connection status (e.g. Groq, Tavily).
+4. **Golden Scenario Behavioral Evaluation**: Non-invasive end-to-end execution harness (`evaluate_golden_scenarios.py --live`) running the assembled application (`build_application() -> run()`) against curated query scenarios (local known, stale version-specific, fictional premise) to record observed trace steps, web fallback usage, and answer grounding.
+
+### Q2: "What key lesson did Pass-15B teach about mocking LLM providers in tests?"
+**Answer:**
+A mocked unit test validates caller logic and parameters, but it **cannot prove that a third-party hosted LLM model still exists on the provider's platform**.
+During Pass-15B, unit tests with mocked Groq clients passed 100%, but live integration tests failed because the configured Groq model ID had been retired by the vendor.
+**Lesson**: Mocked unit tests prove contract compliance; opt-in live integration smoke tests prove operational provider reality.
+
+### Q3: "What is the difference between system evaluation and unit testing?"
+**Answer:**
+- **Unit Testing**: Verifies deterministic, binary code correctness (e.g., "does the routing function return `rewrite_query` when documents list is empty?").
+- **System Evaluation**: Observes non-deterministic probabilistic system behavior (e.g., "does the relevance grader LLM recognize that a Kubernetes v1.31 document is insufficient for a v1.32 specific feature query?"). Evaluation evidence is observational rather than route-forcing.
+
+---
+
 
 ## Pass-13 — Decision Trace Persistence & Auditability
 
