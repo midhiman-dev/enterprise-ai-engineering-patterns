@@ -15,3 +15,4 @@ This directory captures architectural decisions for Use Case 01 (Corrective RAG 
 * [ADR-009: SQLite Persistence for DecisionTrace Audit Records](ADR-009-sqlite-decision-trace-persistence.md) — *Accepted*
 * [ADR-010: FastAPI HTTP Interface Boundary](ADR-010-fastapi-http-interface.md) — *Accepted*
 * [ADR-011: Frozen Kubernetes v1.31 Knowledge Snapshot for Corrective RAG](ADR-011-frozen-kubernetes-knowledge-snapshot.md) — *Accepted*
+* [ADR-012: External Evidence Trust Boundary and Indirect Prompt-Injection Controls](ADR-012-external-evidence-trust-boundary-and-indirect-prompt-injection.md) — *Accepted*
