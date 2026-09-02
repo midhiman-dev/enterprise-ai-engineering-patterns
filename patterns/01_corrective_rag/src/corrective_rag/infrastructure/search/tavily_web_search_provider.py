@@ -4,17 +4,12 @@ Implements external web evidence retrieval using the Tavily Search API.
 Structurally satisfies the Domain WebSearchProvider port without exposing Tavily
 SDK objects, response models, or API mechanics outside the Infrastructure layer.
 
-Learner Diagnostic Questions Answered:
-1. What does this file do?
-   Executes external web searches via Tavily and normalizes provider result payloads
-   into provider-neutral Domain Document entities.
-2. Why does it belong in this architectural layer?
-   It is an Infrastructure adapter implementing the Domain WebSearchProvider port.
-3. What dependency does it need?
-   Requires TavilyConfig, TavilySearchClient, and Domain Question / Document entities.
-4. What would change if that dependency were replaced?
-   Replacing Tavily with another search provider (e.g., Bing or SerpAPI) would replace
-   this file without altering Domain ports or LangGraph orchestration nodes.
+Security boundary:
+    Search-provider results are external, untrusted content. Only results whose URLs
+    match configured authoritative source prefixes are admitted into the Domain
+    evidence set. Accepted web documents are explicitly tagged with provenance and
+    trust metadata so downstream components can preserve the distinction between
+    trusted instructions and untrusted retrieved data.
 """
 
 from collections.abc import Sequence
@@ -23,6 +18,10 @@ from corrective_rag.domain.entities.document import Document
 from corrective_rag.domain.entities.question import Question
 from corrective_rag.infrastructure.search.tavily_client import TavilySearchClient
 from corrective_rag.infrastructure.search.tavily_config import TavilyConfig
+
+EXTERNAL_RETRIEVAL_CHANNEL = "external_web"
+ALLOWLISTED_SOURCE_TRUST = "allowlisted_authoritative"
+SOURCE_POLICY_NAME = "authoritative_source_prefix_allowlist"
 
 
 class TavilyWebSearchProvider:
@@ -41,14 +40,24 @@ class TavilyWebSearchProvider:
         self._config = config
         self._client = client
 
+    def _is_allowed_source(self, url: str) -> bool:
+        """Return True only when URL matches an explicitly configured source prefix."""
+        return any(
+            url.startswith(prefix) for prefix in self._config.allowed_source_prefixes
+        )
+
     def search(self, question: Question) -> Sequence[Document]:
-        """Searches external web sources via Tavily and returns normalized Domain Documents.
+        """Search authoritative external sources and return normalized Domain Documents.
+
+        External search results are treated as untrusted content even when their source
+        is allowlisted. The allowlist establishes source authority; it does not grant
+        instruction authority to the retrieved text.
 
         Args:
             question: Question entity containing the search query string.
 
         Returns:
-            An ordered sequence of candidate Domain Document entities.
+            An ordered sequence of allowlisted candidate Domain Document entities.
 
         Raises:
             RuntimeError: If Tavily API request fails due to operational network, rate-limit,
@@ -85,10 +94,19 @@ class TavilyWebSearchProvider:
             content = raw_content.strip()
             url = raw_url.strip()
 
+            # Deterministic control: external evidence crosses the trust boundary only
+            # when it originates from a configured authoritative source prefix.
+            if not self._is_allowed_source(url):
+                continue
+
             raw_title = item.get("title")
             title = raw_title.strip() if isinstance(raw_title, str) and raw_title.strip() else None
 
-            metadata: dict[str, object] = {}
+            metadata: dict[str, object] = {
+                "retrieval_channel": EXTERNAL_RETRIEVAL_CHANNEL,
+                "source_trust": ALLOWLISTED_SOURCE_TRUST,
+                "source_policy": SOURCE_POLICY_NAME,
+            }
             raw_score = item.get("score")
             if isinstance(raw_score, (int, float)):
                 metadata["tavily_score"] = float(raw_score)
