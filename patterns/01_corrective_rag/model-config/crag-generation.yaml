@@ -1,0 +1,20 @@
+model_config_id: crag-generation
+version: 1.0.0
+status: active
+
+provider: groq
+model: openai/gpt-oss-120b
+parameters:
+  temperature: 0.0
+
+change_reason: >
+  Record the current CRAG generation model and behaviour-affecting settings as a governed configuration.
+
+evaluated_against: crag-regression-suite
+
+runtime_source: src/corrective_rag/infrastructure/generation/groq_config.py
+
+notes:
+  - GROQ_MODEL may override the default model at runtime.
+  - Temperature is currently fixed to 0.0 by the runtime configuration loader.
+  - Only parameters actually used by CRAG are recorded here. Parameters such as top_k, top_p, or reasoning effort should be added only if the runtime begins to use them.
