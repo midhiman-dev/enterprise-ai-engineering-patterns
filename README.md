@@ -504,6 +504,27 @@ These can become later exercises only when they introduce a new engineering less
 
 ---
 
+---
+
+# Pattern 08 — AI-Native SDLC: Human-Governed AI-Assisted Engineering
+
+**Current maturity:** **IDENTIFIED**
+
+> 📁 **Pattern Directory:** [`patterns/08_ai_native_sdlc`](patterns/08_ai_native_sdlc/README.md)
+
+This pattern will demonstrate a governed AI-assisted engineering lifecycle using versioned artifacts and explicit human approval gates. A small clean-room REXX/CMD-style modernization scenario will be used to make the lifecycle inspectable.
+
+Core engineering flow:
+
+`Analyze → Validate → Design → Review → Plan → Review → Implement → Review → Test → Approve → Release`
+
+Core governance rule:
+
+> **A downstream AI agent may consume only the latest approved upstream artifact, never an unapproved draft artifact.**
+
+The pattern will also include a Production Readiness Agent that checks whether the approved application can be deployed, operated, supported, observed, and recovered safely before human release approval.
+
+
 # Future Patterns
 
 Additional tutorials will be added selectively. A topic belongs here only if it introduces a distinct enterprise AI engineering problem rather than repeating the same chatbot pattern with another framework.
