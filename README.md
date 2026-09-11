@@ -1,16 +1,31 @@
 # Enterprise AI Engineering Patterns
 
-Hands-on, tutorial-style reference implementations for learning how to build **enterprise-grade AI systems** with clean architecture, explicit control flow, observability, testing, and provider isolation.
+A hands-on learning lab for building **implementation-level understanding of recurring enterprise AI engineering patterns**.
 
-This repository is intentionally different from "one notebook + one prompt + one framework" tutorials. Each use case starts with a realistic enterprise problem, then builds the smallest complete system that makes the important AI engineering decisions visible and testable.
+The approach is deliberate: identify a pattern worth understanding, frame it around a realistic enterprise problem, design the architecture, implement the important paths, exercise failure modes, test the behaviour, and record the trade-offs and lessons.
 
-> **Learning goal:** build it, trace it, break it, test it, and be able to explain the architecture and trade-offs confidently in an interview.
+This repository is intentionally different from "one notebook + one prompt + one framework" tutorials. The goal is not to collect fashionable patterns or imply production maturity before it exists. It is to turn architectural concepts into working, inspectable engineering evidence that can inform day-to-day enterprise delivery.
+
+> **Learning goal:** build it, trace it, break it, test it, and be able to explain why the design works, where it fails, and what would need to change for production use.
 
 ## Repository Status
 
-🚧 **Early build — architecture and first use case are being implemented.**
+🚧 **Learning lab — first pattern currently in BUILDING state.**
 
-The repository currently establishes the direction and design contract for the first tutorial. Commands, screenshots, benchmarks, and runnable setup instructions will be added only as the corresponding implementation is verified.
+This repository is a structured learning programme, not a claim that every listed pattern is already implemented or production-ready. Architecture, implementation evidence, commands, screenshots, benchmarks, and runnable setup instructions are added only when the corresponding work exists and has been verified.
+
+### Pattern maturity model
+
+Every pattern should carry one of these states:
+
+| State | Meaning |
+|---|---|
+| **IDENTIFIED** | Enterprise problem/pattern selected for deeper study; implementation not yet designed |
+| **DESIGNED** | Architecture, boundaries, failure modes, and verification approach defined |
+| **BUILDING** | Implementation is in progress; claims are limited to what currently exists |
+| **VERIFIED** | Intended implementation paths and key failure paths have executable evidence |
+
+A pattern is never presented as **VERIFIED** simply because its design looks plausible. Evidence must exist.
 
 ## What This Repository Teaches
 
@@ -31,6 +46,8 @@ The recurring design signature is:
 ---
 
 # Use Case 01 — Corrective RAG for Kubernetes Troubleshooting
+
+**Current maturity:** **BUILDING**
 
 > 📁 **Use Case Directory:** [`patterns/01_corrective_rag`](patterns/01_corrective_rag/README.md)
 >
@@ -433,9 +450,9 @@ Each use case in this repository should be worked through in roughly this order:
 
 ---
 
-# Interview Outcomes
+# Learning and Architecture Outcomes
 
-After completing Use Case 01, you should be able to answer questions such as:
+After completing and verifying Use Case 01, the implementation should support confident answers to questions such as:
 
 - What problem does Corrective RAG solve that normal RAG does not?
 - Why is this CRAG rather than GraphRAG?
@@ -453,7 +470,7 @@ After completing Use Case 01, you should be able to answer questions such as:
 - What evidence would you keep for auditability in a production troubleshooting assistant?
 - What changes before allowing this assistant to execute remediation actions rather than only recommend them?
 
-The goal is to answer from code you have built and failure paths you have observed, not from memorized definitions.
+The goal is to reason from code that has actually been built and failure paths that have actually been observed, not from memorized definitions or unverified design claims.
 
 ---
 
