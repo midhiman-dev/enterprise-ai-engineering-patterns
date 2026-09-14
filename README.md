@@ -525,6 +525,43 @@ Core governance rule:
 The pattern will also include a Production Readiness Agent that checks whether the approved application can be deployed, operated, supported, observed, and recovered safely before human release approval.
 
 
+
+# Pattern 10 — Domain-Driven AI Architecture: Deterministic Domain, Intelligent Edge
+
+**Current maturity:** **IDENTIFIED**
+
+> 📁 **Pattern Directory:** [`patterns/10_domain_driven_ai_architecture`](patterns/10_domain_driven_ai_architecture/README.md)
+
+This pattern explores how to introduce probabilistic AI into a domain-rich enterprise application without allowing AI to redefine, bypass, or weaken authoritative business rules.
+
+Reference domain: **Payment & Refund**.
+
+Core question:
+
+> **How do we integrate probabilistic AI into a domain-rich enterprise application while preserving ubiquitous language, business invariants, consistency boundaries, domain ownership, and deterministic authority?**
+
+Core learning rules:
+
+- **AI interprets; the domain validates.**
+- **AI proposes; aggregates authorize state transitions.**
+- **Agents call domain capabilities; they do not bypass aggregates.**
+- **Bounded Contexts are also context boundaries for AI.**
+- **Domain Events expose business facts without making the domain depend on AI.**
+
+Initial scope:
+
+- Ubiquitous Language
+- Value Objects
+- Entities
+- Aggregates / Aggregate Roots
+- Domain Events
+- Bounded Contexts
+- application/domain boundary
+- AI/domain authority boundary
+
+The pattern will first establish a conventional deterministic Payment & Refund domain model and only then introduce AI at the edge.
+
+
 # Future Patterns
 
 Additional tutorials will be added selectively. A topic belongs here only if it introduces a distinct enterprise AI engineering problem rather than repeating the same chatbot pattern with another framework.
