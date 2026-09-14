@@ -526,6 +526,32 @@ The pattern will also include a Production Readiness Agent that checks whether t
 
 
 
+
+# Pattern 09 — Advanced AI Engineering: Context, Loop & Harness
+
+**Current maturity:** **DESIGNED**
+
+> 📁 **Pattern Directory:** [`patterns/09_context_loop_harness_engineering`](patterns/09_context_loop_harness_engineering/README.md)
+
+This umbrella pattern develops three complementary engineering disciplines around AI systems:
+
+1. **Context Engineering** — **Write → Select → Compress → Isolate**
+2. **Loop Engineering** — **Observe → Reason → Act → Verify**
+3. **Harness Engineering** — tools, permissions, policy, evaluation, governance, HITL, observability, monitoring, and audit.
+
+Core question:
+
+> **How do we engineer the runtime around an AI model so it receives the right context, operates through bounded and recoverable loops, and executes inside a governed, observable, and testable harness?**
+
+Key rules:
+
+- **Context is a budgeted engineering resource, not an unlimited prompt buffer.**
+- **The model reasons inside the loop. Code owns the loop.**
+- **The model is not the architecture. The harness makes the model usable.**
+
+The existing tutorial/demo/enterprise/ADR scaffolding makes this pattern DESIGNED, but not VERIFIED. Verification requires personally running, modifying, breaking, observing, and evaluating the exercises under this repository's evidence rules.
+
+
 # Pattern 10 — Domain-Driven AI Architecture: Deterministic Domain, Intelligent Edge
 
 **Current maturity:** **IDENTIFIED**
