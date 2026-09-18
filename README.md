@@ -588,6 +588,32 @@ Initial scope:
 The pattern will first establish a conventional deterministic Payment & Refund domain model and only then introduce AI at the edge.
 
 
+
+# Pattern 11 — A2A Agent Interoperability: Cross-Boundary Agent Collaboration
+
+**Current maturity:** **DESIGNED**
+
+> 📁 **Pattern Directory:** [`patterns/11_a2a_agent_interoperability`](patterns/11_a2a_agent_interoperability/README.md)
+
+This pattern teaches the architectural decision of when to introduce the **Agent2Agent (A2A) Protocol** between independently governed agent systems instead of using MCP, a direct API, framework-native sub-agents, or ordinary events/messages.
+
+Reference exercise: **Manufacturing Component Shortage Resolution**.
+
+Core question:
+
+> **When should one agent collaborate with another independent agent over A2A, and how should that collaboration be discovered, secured, observed, tested, and governed?**
+
+Core learning rules:
+
+- **MCP gives an agent tools. A2A gives an agent peers.**
+- **Do not introduce A2A merely because there are multiple agents; justify an independent system boundary.**
+- **Remote agents are opaque, not automatically trusted.**
+- **Protocol success is not business success; returned artifacts still require local validation.**
+- **A2A coordinates agents; deterministic domain rules still authorize business state changes.**
+
+The learning path is .NET-first and progresses from official samples to a Host + Procurement Agent, streaming task lifecycle, failure injection, Finance/Risk delegation, cross-language interoperability, A2A + MCP composition, security, observability, and protocol validation.
+
+
 # Future Patterns
 
 Additional tutorials will be added selectively. A topic belongs here only if it introduces a distinct enterprise AI engineering problem rather than repeating the same chatbot pattern with another framework.
