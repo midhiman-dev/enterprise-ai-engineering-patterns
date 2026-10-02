@@ -614,6 +614,34 @@ Core learning rules:
 The learning path is .NET-first and progresses from official samples to a Host + Procurement Agent, streaming task lifecycle, failure injection, Finance/Risk delegation, cross-language interoperability, A2A + MCP composition, security, observability, and protocol validation.
 
 
+# Pattern 12 — Identity-Aware Retrieval: Authorization-First RAG
+
+**Current maturity:** **DESIGNED**
+
+> 📁 **Pattern Directory:** [`patterns/12_identity_aware_retrieval`](patterns/12_identity_aware_retrieval/README.md)
+>
+> 📐 **Final Design:** [`TECH_SPEC.md`](patterns/12_identity_aware_retrieval/TECH_SPEC.md)
+
+This pattern teaches how enterprise AI retrieval preserves user authorization boundaries across heterogeneous data sources before evidence reaches the model.
+
+Core question:
+
+> **How do we ensure that an authenticated user's identity constrains document, relational, and vector retrieval before similarity ranking, prompt assembly, model inference, or tool execution?**
+
+Core learning rules:
+
+- **Authentication identifies the caller; authorization constrains the retrieval space.**
+- **Security trimming happens before ranking and prompt construction, not as a post-filter.**
+- **One immutable IdentityContext carries canonical users, roles, groups, tenant, and principals across retrievers and tools.**
+- **Each source keeps its native authorization semantics while consuming the same canonical principal set.**
+- **Retrieval authorization does not imply action authorization; tools re-check authority independently.**
+- **Security correctness requires negative tests proving unauthorized evidence never appears in model context.**
+- **Audit evidence must reconstruct what the model actually saw.**
+
+The reference design uses a local Mock SharePoint ACL model, PostgreSQL structured data, pgvector metadata pre-filtering, Auth0 JWT validation, and reconstructible audit evidence. The implementation has not started, so the pattern remains **DESIGNED**.
+
+---
+
 # Future Patterns
 
 Additional tutorials will be added selectively. A topic belongs here only if it introduces a distinct enterprise AI engineering problem rather than repeating the same chatbot pattern with another framework.
@@ -626,7 +654,6 @@ Potential areas include:
 - observability and OpenTelemetry for LLM/agent workflows
 - prompt-injection and data-boundary controls
 - model routing and cost/latency trade-offs
-- role-aware enterprise retrieval
 - durable agent state and recovery
 
 The repository will prefer **fewer, complete, well-tested patterns** over a large catalog of half-built demos.
