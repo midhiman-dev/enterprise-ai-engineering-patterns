@@ -642,6 +642,33 @@ The reference design uses a local Mock SharePoint ACL model, PostgreSQL structur
 
 ---
 
+# Pattern 13 — Decision-Native AI Architecture: Probabilistic Judgement, Deterministic Authority
+
+**Current maturity:** **DESIGNED**
+
+> 📁 **Pattern Directory:** [`patterns/13_decision_native_ai_architecture`](patterns/13_decision_native_ai_architecture/README.md)
+>
+> 📐 **Design Specification:** [`TECH_SPEC.md`](patterns/13_decision_native_ai_architecture/TECH_SPEC.md)
+
+This pattern formalizes how an enterprise workflow consumes **typed, probabilistic AI judgements** while preserving deterministic policy, business authority, human review and reconstructible audit.
+
+Core question:
+
+> **How do uncertain model judgements become safe, calibrated, selectively automated business decisions without letting model confidence authorize actions?**
+
+Core learning rules:
+
+- **Model judges; code governs.**
+- **Confidence is not authorization; probabilities require validation and calibration.**
+- **Abstention and human review are valid outcomes, not model failures.**
+- **Typed decisions and model adapters are replaceable; deterministic policy is provider-independent.**
+- **Measure accuracy at automation coverage, guardrail recall, decision robustness and total cost.**
+- **Fail closed on invalid outputs, uncertain decisions and model outages.**
+
+Reference lab: [Governed Intake Router](https://github.com/midhiman-dev/portfolio-knowledge-base/blob/main/projects/governed-intake-router-jev.md), comparing Jev, Vela 2.0, Microsoft-Decision-1 and a conventional LLM baseline. The lab is planned; no provider has yet been verified as the winner. Pattern 13 is **DESIGNED**, not BUILDING or VERIFIED.
+
+---
+
 # Future Patterns
 
 Additional tutorials will be added selectively. A topic belongs here only if it introduces a distinct enterprise AI engineering problem rather than repeating the same chatbot pattern with another framework.
